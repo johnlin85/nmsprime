@@ -112,4 +112,19 @@ BaseRoute::group([], function () {
         'as' => 'Sla.clicked_sla',
         'uses' => 'SlaController@clicked_sla',
     ]);
+
+    BaseRoute::get('Modules', [
+        'as' => 'Modules.index',
+        'uses' => 'ModulesController@index',
+    ]);
+
+    BaseRoute::get('Modules/install/{module}', [
+        'as' => 'Modules.install',
+        'uses' => 'ModulesController@install',
+    ]);
+
+    BaseRoute::get('Modules/uninstall/{module}', [
+        'as' => 'Modules.uninstall',
+        'uses' => 'ModulesController@uninstall',
+    ]);
 });

@@ -879,7 +879,7 @@ class DashboardController extends BaseController
      *
      * Official News Parser
      */
-    public function newsLoadToFile()
+    public static function newsLoadToFile()
     {
         if (env('IGNORE_NEWS')) {
             return false;
@@ -892,6 +892,7 @@ class DashboardController extends BaseController
         $files = [
             'news.json' => "$support/news.php?ns=".urlencode($sla->get_sla_size()).'&sla='.urlencode($sla->name),
             'documentation.json' => "$support/documentation.json",
+            'modules.json' => "$support/modules.json",
         ];
 
         foreach ($files as $name => $url) {

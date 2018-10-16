@@ -877,6 +877,9 @@ class DashboardController extends BaseController
      * News panel: load news from support server to json file
      * Documentation panel: load documentation.json from support server
      *
+     * @todo: move to nmsprime-base package (like BaseController)
+     *        this tuff MUST work without dashboard module installed!
+     *
      * Official News Parser
      */
     public static function newsLoadToFile()

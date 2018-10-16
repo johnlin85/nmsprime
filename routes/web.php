@@ -123,8 +123,13 @@ BaseRoute::group([], function () {
         'uses' => 'ModulesController@install',
     ]);
 
-    BaseRoute::get('Modules/uninstall/{module}', [
-        'as' => 'Modules.uninstall',
-        'uses' => 'ModulesController@uninstall',
+    BaseRoute::get('Modules/remove/{module}', [
+        'as' => 'Modules.remove',
+        'uses' => 'ModulesController@remove',
+    ]);
+
+    BaseRoute::post('Modules/install_or_remove', [
+        'as' => 'Modules.install_or_remove',
+        'uses' => 'ModulesController@install_or_remove',
     ]);
 });

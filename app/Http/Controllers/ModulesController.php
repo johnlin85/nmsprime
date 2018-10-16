@@ -10,12 +10,43 @@ class ModulesController extends BaseController
 {
     public function install($module)
     {
+        // TODO: like in install_or_remove()
         d('yum install '.$module);
+
+        $this->yum_log();
     }
 
-    public function uninstall($module)
+    public function remove($module)
     {
+        // TODO: like in install_or_remove()
         d('yum remove '.$module);
+
+        $this->yum_log();
+    }
+
+    public function install_or_remove()
+    {
+        $shell = '';
+
+        foreach (\Input::get() as $package => $todo) {
+            if ($todo == 'install') {
+                $shell .= "\n install ".$package;
+            }
+            if ($todo == 'remove') {
+                $shell .= "\n remove ".$package;
+            }
+        }
+
+        $shell .= "\n run";
+
+        \File::put('/var/www/nmsprime/storage/systemd/installd', $shell);
+
+        $this->yum_log();
+    }
+
+    public function yum_log()
+    {
+        d("TODO: parse /tmp/yum.log with realtime reload on Modules index page");
     }
 
     /**

@@ -21,7 +21,8 @@ class ProvBaseController extends BaseController
             ['form_type' => 'text', 'name' => 'notif_mail', 'description' => 'Notification Email Address'],
             ['form_type' => 'text', 'name' => 'dhcp_def_lease_time', 'description' => 'DHCP Default Lease Time'],
             ['form_type' => 'text', 'name' => 'dhcp_max_lease_time', 'description' => 'DHCP Max Lease Time'],
-            ['form_type' => 'text', 'name' => 'max_cpe', 'description' => 'Max CPEs per Modem', 'help' => 'Minimum & Default: 2'],
+            ['form_type' => 'text', 'name' => 'max_cpe_priv', 'description' => 'Max CPEs per Modem with private CPEs', 'help' => 'Minimum & Default: 2'],
+            ['form_type' => 'text', 'name' => 'max_cpe_pub', 'description' => 'Max CPEs per Modem with public CPEs', 'help' => 'Minimum & Default: 2'],
             ['form_type' => 'text', 'name' => 'ds_rate_coefficient', 'description' => 'Downstream rate coefficient', 'help' => trans('helper.rate_coefficient')],
             ['form_type' => 'text', 'name' => 'us_rate_coefficient', 'description' => 'Upstream rate coefficient', 'help' => trans('helper.rate_coefficient')],
 

@@ -21,8 +21,9 @@ class ProvBase extends \BaseModel
     {
         return [
             'provisioning_server' => 'ip',
-            // TODO: Add max_cpe rule when validation errors are displayed again
-            // 'max_cpe' => 'numeric|min:1|max:254',
+            // TODO: Add max_cpe rules when validation errors are displayed again
+            // 'max_cpe_priv' => 'numeric|min:1|max:254',
+            // 'max_cpe_pub' => 'numeric|min:1|max:254',
         ];
     }
 
@@ -138,8 +139,8 @@ class ProvBase extends \BaseModel
         $data .= "\n# CLASS Specs for CM, MTA, CPE\n";
         $data .= 'class "CM" {'."\n\t".'match if (substring(option vendor-class-identifier,0,6) = "docsis");'."\n\toption ccc.dhcp-server-1 0.0.0.0;\n\tddns-updates on;\n}\n\n";
         $data .= 'class "MTA" {'."\n\t".'match if (substring(option vendor-class-identifier,0,4) = "pktc");'."\n\t".'option ccc.provision-server 0 "'.$dhcp_fqdn.'"; # number of letters before every through dot seperated word'."\n\t".'option ccc.realm 05:42:41:53:49:43:01:31:00;  # BASIC.1'."\n\tddns-updates on;\n}\n\n";
-        $data .= 'class "Client" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'spawn with option agent.remote-id; # create a sub-class automatically'."\n\t".'lease limit 4; # max 4 private cpe per cm'."\n}\n\n";
-        $data .= 'class "Client-Public" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'match pick-first-value (option agent.remote-id);'."\n\t".'lease limit 4; # max 4 public cpe per cm'."\n}\n\n";
+        $data .= 'class "Client" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'spawn with option agent.remote-id; # create a sub-class automatically'."\n\t".'lease limit '.$this->max_cpe_priv.'; # max '.$this->max_cpe_priv.' private cpe per cm'."\n}\n\n";
+        $data .= 'class "Client-Public" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'match pick-first-value (option agent.remote-id);'."\n\t".'lease limit '.$this->max_cpe_pub.'; # max '.$this->max_cpe_pub.' public cpe per cm'."\n}\n\n";
 
         File::put($file_dhcp_conf, $data);
     }
@@ -199,7 +200,7 @@ class ProvBaseObserver
         }
 
         // build all Modem Configfiles via Job as this will take a long time
-        if (multi_array_key_exists(['ds_rate_coefficient', 'us_rate_coefficient', 'max_cpe'], $changes)) {
+        if (multi_array_key_exists(['ds_rate_coefficient', 'us_rate_coefficient', 'max_cpe_priv', 'max_cpe_pub'], $changes)) {
             \Queue::push(new \Modules\ProvBase\Console\configfileCommand(0, 'cm'));
         }
     }

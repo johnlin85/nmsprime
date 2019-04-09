@@ -560,7 +560,7 @@ class Modem extends \BaseModel
 
         // Evaluate network access (NA) and MaxCPE count
         // Note: NA becomes only zero when internet is disabled on contract (no valid tariff) or modem (manually) and contract has no telephony
-        $cpe_cnt = \Modules\ProvBase\Entities\ProvBase::first()->max_cpe;
+        $cpe_cnt = $this->public ? \Modules\ProvBase\Entities\ProvBase::first()->max_cpe_pub : \Modules\ProvBase\Entities\ProvBase::first()->max_cpe_priv;
         $max_cpe = $cpe_cnt ?: 2; 		// default 2
         $internet_access = 1;
 

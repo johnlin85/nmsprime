@@ -138,9 +138,14 @@ class ProvBase extends \BaseModel
 
         $data .= "\n# CLASS Specs for CM, MTA, CPE\n";
         $data .= 'class "CM" {'."\n\t".'match if (substring(option vendor-class-identifier,0,6) = "docsis");'."\n\toption ccc.dhcp-server-1 0.0.0.0;\n\tddns-updates on;\n}\n\n";
+
+        // lease limits (=max lease count) for CPE classes
+        // needs to be greater than max_cpe to be able to replace CPEs
+        $lease_limit_priv = $this->max_cpe_priv * 2;    // there are enough private CPE IPs
+        $lease_limit_pub = $this->max_cpe_pub + 1;      // public IPs are expensive; be restrictive
         $data .= 'class "MTA" {'."\n\t".'match if (substring(option vendor-class-identifier,0,4) = "pktc");'."\n\t".'option ccc.provision-server 0 "'.$dhcp_fqdn.'"; # number of letters before every through dot seperated word'."\n\t".'option ccc.realm 05:42:41:53:49:43:01:31:00;  # BASIC.1'."\n\tddns-updates on;\n}\n\n";
-        $data .= 'class "Client" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'spawn with option agent.remote-id; # create a sub-class automatically'."\n\t".'lease limit '.$this->max_cpe_priv.'; # max '.$this->max_cpe_priv.' private cpe per cm'."\n}\n\n";
-        $data .= 'class "Client-Public" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'match pick-first-value (option agent.remote-id);'."\n\t".'lease limit '.$this->max_cpe_pub.'; # max '.$this->max_cpe_pub.' public cpe per cm'."\n}\n\n";
+        $data .= 'class "Client" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'spawn with option agent.remote-id; # create a sub-class automatically'."\n\t".'lease limit '.$lease_limit_priv.'; # max '.$lease_limit_priv.' private cpe per cm'."\n}\n\n";
+        $data .= 'class "Client-Public" {'."\n\t".'match if ((substring(option vendor-class-identifier,0,6) != "docsis") and (substring(option vendor-class-identifier,0,4) != "pktc"));'."\n\t".'match pick-first-value (option agent.remote-id);'."\n\t".'lease limit '.$lease_limit_pub.'; # max '.$lease_limit_pub.' public cpe per cm'."\n}\n\n";
 
         File::put($file_dhcp_conf, $data);
     }

@@ -195,8 +195,8 @@ class ProvMonController extends \BaseController
             return ['bsclass' => 'warning', 'text' => trans('messages.modemAnalysis.noNetworkAccess')];
         }
 
-        $maxCpe = preg_grep('/MaxCPE \d/', $config);
-        preg_match('/MaxCPE (\d)/', end($maxCpe), $match);
+        $maxCpe = preg_grep('#MaxCPE \d#', $config);
+        preg_match('#MaxCPE (\d*);#', end($maxCpe), $match);
         $maxCpe = $match[1];
 
         $cpeMacs = preg_grep('/CpeMacAddress (.*?);/', $config);

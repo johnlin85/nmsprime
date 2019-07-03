@@ -9,6 +9,7 @@ use Modules\ProvBase\Entities\Contract;
 use Modules\BillingBase\Providers\Currency;
 use App\Http\Controllers\BaseViewController;
 use Modules\BillingBase\Providers\SettlementRunData;
+use Modules\ProvBase\Entities\DocumentTemplate;
 use Digitick\Sepa\TransferFile\Factory\TransferFileFacadeFactory;
 
 /**
@@ -70,6 +71,14 @@ class SepaAccount extends \BaseModel
         $ret['Edit']['CostCenter']['class'] = 'CostCenter';
         $ret['Edit']['CostCenter']['relation'] = $this->costcenters;
 
+        $ret['Edit']['DocumentTemplate']['class'] = 'DocumentTemplate';
+        $ret['Edit']['DocumentTemplate']['relation'] = $this->documenttemplates;
+
+        $ret['Edit']['DocumentTemplateDerived']['options']['hide_create_button'] = 1;
+        $ret['Edit']['DocumentTemplateDerived']['options']['hide_delete_button'] = 1;
+        $ret['Edit']['DocumentTemplateDerived']['view']['vars']['derived_documenttemplates'] = $this->get_derived_documenttemplates();
+        $ret['Edit']['DocumentTemplateDerived']['view']['view'] = 'provbase::DocumentTemplate.relation_derived';
+
         return $ret;
     }
 
@@ -93,7 +102,86 @@ class SepaAccount extends \BaseModel
 
     public function documenttemplates()
     {
-        return $this->hasMany('Modules\ProvBase\Entities\DocumentTemplate');
+        return $this->hasMany('Modules\ProvBase\Entities\DocumentTemplate', 'sepaaccount_id');
+    }
+
+    /**
+     * Get all document templates that are used implicitely (“derived”).
+     *
+     * @author Patrick Reichel
+     */
+    public function derived_documenttemplates()
+    {
+        $templates = DocumentTemplate::leftJoin('documenttype', 'documenttype.id', '=', 'documenttemplate.documenttype_id')
+            ->select('documenttemplate.*', 'documenttype.type_view')
+            ->whereIn('module', array_keys(\Module::getByStatus(1)))
+            ->where(function ($query) {
+                $query->whereNull('sepaaccount_id')
+                      ->orWhere('sepaaccount_id', '=', $this->id);
+            })
+            ->where(function ($query) {
+                $query->whereNull('company_id')
+                      ->orWhere('company_id', '=', $this->company->id);
+            })
+            ->where('usable', '>', 0)
+            ->orderBy('company_id')
+            ->orderBy('sepaaccount_id')
+            ->get();
+
+        $types = [];
+        $ids = [];
+        foreach ($templates as $template) {
+            if (is_null($template->sepaaccount_id)) {
+                // add base template or replace by company template
+                // save because ordered by company_id
+                $types[$template->documenttype_id] = $template;
+            }
+            elseif (array_key_exists($template->documenttype_id, $types)) {
+                // remove sepaaccount templates (which are delivered last from database)
+                // save because ordered by sepaaccount_id
+                unset($types[$template->documenttype_id]);
+            }
+        }
+
+        return collect($types);
+    }
+
+    /**
+     * Get all document templates that are used implicitely (“derived”) for use in relation blade.
+     *
+     * @author Patrick Reichel
+     */
+    public function get_derived_documenttemplates()
+    {
+        $derived_templates = $this->derived_documenttemplates();
+
+        $ret = [];
+        foreach ($derived_templates as $template) {
+            $ret[$template->id] = $template->type_view;
+        }
+
+        asort($ret);
+        return $ret;
+    }
+
+    /**
+     * Returns data for use in controller edit selects.
+     *
+     * @author Patrick Reichel
+     */
+    public static function get_sepaaccounts_for_edit_view($with_empty_first=false) {
+
+        $ret = [];
+        $sepaaccounts = SepaAccount::all();
+        foreach ($sepaaccounts as $sepaaccount) {
+            $company = $sepaaccount->company;
+            $ret[$sepaaccount->id] = $sepaaccount->name.' ('.$company->name.')';
+        }
+        asort($ret);
+        if ($with_empty_first) {
+            $ret = [0 => '–'] + $ret;
+        }
+        return $ret;
     }
 
     /**

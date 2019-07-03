@@ -2,6 +2,8 @@
 
 namespace Modules\BillingBase\Entities;
 
+use Modules\ProvBase\Entities\DocumentTemplate;
+
 class Company extends \BaseModel
 {
     // The associated SQL table for this Model
@@ -66,6 +68,14 @@ class Company extends \BaseModel
         $ret['Edit']['SepaAccount']['class'] = 'SepaAccount';
         $ret['Edit']['SepaAccount']['relation'] = $this->accounts;
 
+        $ret['Edit']['DocumentTemplate']['class'] = 'DocumentTemplate';
+        $ret['Edit']['DocumentTemplate']['relation'] = $this->documenttemplates;
+
+        $ret['Edit']['DocumentTemplateDerived']['options']['hide_create_button'] = 1;
+        $ret['Edit']['DocumentTemplateDerived']['options']['hide_delete_button'] = 1;
+        $ret['Edit']['DocumentTemplateDerived']['view']['vars']['derived_documenttemplates'] = $this->get_derived_documenttemplates();
+        $ret['Edit']['DocumentTemplateDerived']['view']['view'] = 'provbase::DocumentTemplate.relation_derived';
+
         return $ret;
     }
 
@@ -79,7 +89,79 @@ class Company extends \BaseModel
 
     public function documenttemplates()
     {
-        return $this->hasMany('Modules\ProvBase\Entities\DocumentTemplate');
+        return $this->hasMany('Modules\ProvBase\Entities\DocumentTemplate')->where('sepaaccount_id', '=', null);
+    }
+
+    /**
+     * Get all document templates that are used implicitely (“derived”).
+     *
+     * @return  \Collection  One template for each type if not defined here.
+     *
+     * @author  Patrick Reichel
+     */
+    public function derived_documenttemplates()
+    {
+        $templates = DocumentTemplate::leftJoin('documenttype', 'documenttype.id', '=', 'documenttemplate.documenttype_id')
+            ->select('documenttemplate.*', 'documenttype.type_view')
+            ->whereIn('module', array_keys(\Module::getByStatus(1)))
+            ->where('sepaaccount_id', '=', null)
+            ->where(function ($query) {
+                $query->whereNull('company_id')
+                      ->orWhere('company_id', '=', $this->id);
+            })
+            ->where('usable', '>', 0)
+            ->orderBy('company_id')
+            ->get();
+
+        $types = [];
+        foreach ($templates as $template) {
+            if (is_null($template->company_id)) {
+                $types[$template->documenttype_id] = $template;
+            }
+            elseif (array_key_exists($template->documenttype_id, $types)) {
+                // this is save as we get the templates ordered by company_id
+                unset($types[$template->documenttype_id]);
+            }
+
+        }
+        return collect($types);
+    }
+
+    /**
+     * Get all document templates that are used implicitely (“derived”) for use in relation blade.
+     *
+     * @author Patrick Reichel
+     */
+    public function get_derived_documenttemplates()
+    {
+        $derived_templates = $this->derived_documenttemplates();
+
+        $ret = [];
+        foreach ($derived_templates as $template) {
+            $ret[$template->id] = $template->type_view;
+        }
+
+        asort($ret);
+        return $ret;
+    }
+
+    /**
+     * Returns data for use in controller edit selects.
+     *
+     * @author Patrick Reichel
+     */
+    public static function get_companies_for_edit_view($with_empty_first=false) {
+
+        $ret = [];
+        $companies = Company::all();
+        foreach ($companies as $company) {
+            $ret[$company->id] = $company->name.' ('.$company->city.')';
+        }
+        asort($ret);
+        if ($with_empty_first) {
+            $ret = [0 => '–'] + $ret;
+        }
+        return $ret;
     }
 
     /*

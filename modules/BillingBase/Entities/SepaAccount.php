@@ -91,6 +91,11 @@ class SepaAccount extends \BaseModel
         return $this->belongsTo('Modules\BillingBase\Entities\Company');
     }
 
+    public function documenttemplates()
+    {
+        return $this->hasMany('Modules\ProvBase\Entities\DocumentTemplate');
+    }
+
     /**
      * Observers
      */

@@ -46,5 +46,10 @@ return  [
             'icon'	=> 'fa-tags',
             'class' => IpPool::class,
         ],
+        'DocumentTemplates' => [
+            'link'	=> 'DocumentTemplate.index',
+            'icon'	=> 'fa-window-restore',
+            'class' => DocumentTemplate::class,
+        ],
     ],
 ];

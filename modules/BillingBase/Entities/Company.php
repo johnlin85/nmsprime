@@ -77,6 +77,11 @@ class Company extends \BaseModel
         return $this->hasMany('Modules\BillingBase\Entities\SepaAccount');
     }
 
+    public function documenttemplates()
+    {
+        return $this->hasMany('Modules\ProvBase\Entities\DocumentTemplate');
+    }
+
     /*
      * Init Observers
      */

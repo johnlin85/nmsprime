@@ -60,6 +60,7 @@ return [
         'Menu_QoS' 					=> 'QoS',
         'Menu_CMTS' 				=> 'CMTS',
         'Menu_Ip-Pools' 			=> 'IP-Pools',
+        'Menu_DocumentTemplates'	=> 'Document templates',
         'Menu_ProvVoip'			    => 'VoIP',
         'Menu_PropertyManagement'   => 'Property Management',
         'Menu_MTAs' 				=> 'MTAs',
@@ -196,6 +197,9 @@ return [
         'Header_Ticket'				=> 'Ticket|Tickets',
         'Header_EditTicket'         => 'Edit Ticket',
         'Header_TicketTypes'        => 'TicketTypes',
+        // Documents
+        'Header_DocumentTemplate'   => 'Document template|Document templates',
+        'Header_DocumentTemplateDerived'   => 'derived document template|derived document templates',
     //HFC
         //Topography
         'Header_Topography - Modems'=> 'Topography - Modems',
@@ -328,6 +332,7 @@ return [
         // //IpPool
         'Button_Create IpPool'			=> 'Create IpPool', //workaround
         'Button_Create IP-Pools'		=> 'Create IpPools',
+        'Button_Create DocumentTemplate' => 'Create Document Template',
     //Tickets
         'Button_Create TicketType'     => 'Create Ticket Type',
         'Button_Create Ticket'         => 'Create Ticket ',

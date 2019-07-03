@@ -45,7 +45,16 @@ return [
     'debt' => [
         'date' => 'Date',
         'total_fee' => 'Fee',
-        ],
+    ],
+    // DocumentTemplate
+    'documenttemplate' => [
+        'file' => 'Template file',
+        'format' => 'Template format',
+    ],
+    // DocumentType
+    'documenttype' => [
+        'type_view' => 'Document type',
+    ],
     //Invoices
     'invoice.type' => 'Type',
     'invoice.year' => 'Year',

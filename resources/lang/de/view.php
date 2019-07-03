@@ -62,6 +62,7 @@ return [
         'Menu_Ip-Pools' 			=> 'IP-Bereiche',
         'Menu_ProvVoip'             => 'VoIP',
         'Menu_PropertyManagement'   => 'Liegenschafts - Verwaltung',
+        'Menu_DocumentTemplates'	=> 'Dokument-Vorlagen',
         'Menu_MTAs' 				=> 'MTAs',
         'Menu_Phonenumbers'			=> 'Telefonnummern',
         'Menu_PhoneTariffs'			=> 'Telefontarife',
@@ -196,6 +197,9 @@ return [
         'Header_Ticket'				=> 'Ticket|Tickets',
         'Header_EditTicket'			=> 'Ticket bearbeiten',
         'Header_TicketTypes'        => 'Tickettypen',
+        // Documents
+        'Header_DocumentTemplate'   => 'Dokument-Vorlage|Dokument-Vorlagen',
+        'Header_DocumentTemplateDerived'   => 'geerbte Dokument-Vorlage|geerbte Dokument-Vorlagen',
     //HFC
         //Topography
         'Header_Topography - Modems'=> 'Topografie - Modems',
@@ -336,6 +340,7 @@ return [
         // //IpPool
         'Button_Create IpPool'			=> 'IpPool anlegen', //workaround
         'Button_Create IP-Pools'		=> 'IpPool anlegen',
+        'Button_Create DocumentTemplate' => 'Dokument-Vorlage anlegen',
 
 // DASHBOARD
     'Dashboard_Contracts'			=> 'AKTIVE VERTRÄGE',

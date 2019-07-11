@@ -2,6 +2,8 @@
 
 namespace Acme\php;
 
+// TODO: Use the Laravel Array or Collection class and extend with MACROable trait
+// TODO: see https://laravel.com/docs/5.8/collections#extending-collections
 /*
  * All Stuff of Array Helper Functions should be placed here ..
  */

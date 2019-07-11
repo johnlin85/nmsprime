@@ -8,6 +8,8 @@ use IBAN;
 use Modules\BillingBase\Entities\Product;
 use Modules\ProvVoip\Entities\PhonebookEntry;
 
+// TODO: Cleanup: Export the rules to their respective Rule Classes
+// TODO: see https://laravel.com/docs/5.8/validation#custom-validation-rules
 /*
  * Our own ExtendedValidator Class
  *

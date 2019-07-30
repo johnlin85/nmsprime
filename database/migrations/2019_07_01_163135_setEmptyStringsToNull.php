@@ -37,7 +37,6 @@ class SetEmptyStringsToNull extends Migration
             'enviaorder_phonenumber',   // n to m
             'failed_jobs',              // Laravel
             'guilog',                   // not set by user
-            'item',                     // n to m
             'jobs',                     // Laravel
             'migrations',               // Laravel
             'permissions',              // Bouncer
@@ -45,7 +44,6 @@ class SetEmptyStringsToNull extends Migration
             'trcclass',                 // not set by user
             'ticket_user',              // n to m
             'tickettype_ticket',        // n to m
-            'users',                    // already configured
         ];
 
         $tables = $tables->flip()->forget($except)->keys();
@@ -58,7 +56,7 @@ class SetEmptyStringsToNull extends Migration
             // get rules for this table
             $nullable = [];
             foreach ($rules as $field => $rule) {
-                $nullable[$field] = (in_array('required', explode('|', $rule))) ? false : true;
+                $nullable[$field] = in_array('required', explode('|', $rule)) || in_array('sometimes', explode('|', $rule)) ? false : true;
             }
 
             // get all column names
@@ -72,7 +70,8 @@ class SetEmptyStringsToNull extends Migration
 
                 $type = DB::connection()->getDoctrineColumn($tableName, $column)->getType()->getName();
 
-                if ($column == 'id') {
+                if ($column == 'id' ||
+                    ($tableName == 'items' && $column == 'valid_from')) {
                     continue;
                 }
 
@@ -89,7 +88,7 @@ class SetEmptyStringsToNull extends Migration
                 });
 
                 // set empty strings to NULL
-                DB::statement("UPDATE $tableName SET `$column`=NULL WHERE `$column`='';");
+                DB::statement("UPDATE $tableName SET `$column`=NULL WHERE `$column`='' and `$column` NOT IN ('0');");
             }
         }
     }

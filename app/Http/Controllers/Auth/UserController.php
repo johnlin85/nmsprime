@@ -82,18 +82,29 @@ class UserController extends BaseController
         ];
     }
 
-    public function prepare_input_post_validation($data)
+    public function prepare_input($data)
     {
-        if (isset($data['password']) && empty($data['password'])) {
-            unset($data['password']);
-        } else {
-            $data['password'] = \Hash::make($data['password']);
-            $data['password_changed_at'] = Carbon::now()->toDateTimeString();
-            session()->forget('GlobalNotification.shouldChangePassword');
+        $data = parent::prepare_input($data);
+
+        // Dont require password and password confirmation on updating a User (e.g. language)
+        if (! $data['password']) {
+            $route = \Route::getCurrentRoute();
+
+            if (isset($route->parameters()['User']) && $route->parameters()['User']) {
+                unset($data['password'], $data['password_confirmation']);
+            }
         }
 
-        // removed to have a clean "isDirty()" in updated()
-        unset($data['password_confirmation']);
+        return $data;
+    }
+
+    public function prepare_input_post_validation($data)
+    {
+        if (isset($data['password'])) {
+            $data['password'] = \Hash::make($data['password']);
+            $data['password_changed_at'] = Carbon::now();
+            session()->forget('GlobalNotification.shouldChangePassword');
+        }
 
         Bouncer::refresh();
 

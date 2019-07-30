@@ -25,8 +25,8 @@ class Contract extends \BaseModel
     {
         $rules = [
             'number' => 'string|unique:contract,number,'.$id.',id,deleted_at,NULL',
-            'number2' => 'string|unique:contract,number2,'.$id.',id,deleted_at,NULL',
-            'number3' => 'string|unique:contract,number3,'.$id.',id,deleted_at,NULL',
+            'number2' => 'nullable|string|unique:contract,number2,'.$id.',id,deleted_at,NULL',
+            'number3' => 'nullable|string|unique:contract,number3,'.$id.',id,deleted_at,NULL',
             // 'number4' => 'string|unique:contract,number4,'.$id.',id,deleted_at,NULL', 	// old customer number must not be unique!
             'company' => 'required_if:salutation,Firma,Behörde',
             'firstname' => 'required_if:salutation,Herr,Frau',
@@ -36,10 +36,10 @@ class Contract extends \BaseModel
             'zip' => 'required',
             'city' => 'required',
             'phone' => 'required',
-            'email' => 'email',
+            'email' => 'nullable|email',
             'birthday' => 'required_if:salutation,Herr,Frau|nullable|date',
             'contract_start' => 'date',
-            'contract_end' => 'dateornull', // |after:now -> implies we can not change stuff in an out-dated contract
+            'contract_end' => 'nullable|date', // |after:now -> implies we can not change stuff in an out-dated contract
         ];
 
         if (\Module::collections()->has('BillingBase')) {
@@ -200,6 +200,13 @@ class Contract extends \BaseModel
         return $ret;
     }
 
+    public function view_belongs_to()
+    {
+        if (\Module::collections()->has('PropertyManagement')) {
+            return $this->apartment ?: $this->realty;
+        }
+    }
+
     /*
      * Relations
      */
@@ -326,6 +333,16 @@ class Contract extends \BaseModel
         return $this->hasMany('Modules\Ticketsystem\Entities\Ticket');
     }
 
+    public function realty()
+    {
+        return $this->belongsTo(\Modules\PropertyManagement\Entities\Realty::class);
+    }
+
+    public function apartment()
+    {
+        return $this->belongsTo(\Modules\PropertyManagement\Entities\Apartment::class);
+    }
+
     /**
      * Generate use a new user login password
      * This does not save the involved model
@@ -333,6 +350,31 @@ class Contract extends \BaseModel
     public function generate_password($length = 10)
     {
         $this->password = \Acme\php\Password::generate_password($length);
+    }
+
+    /**
+     * Get list of apartments for select field of edit view
+     *
+     * @return array
+     */
+    public static function getApartmentsList()
+    {
+        $apartments = \DB::table('apartment')->join('realty', 'realty.id', '=', 'apartment.realty_id')
+            ->select(['apartment.id as id', 'name', 'apartment.number as anum', 'realty.number as rnum', 'floor'])
+            ->whereNull('apartment.deleted_at')
+            ->get();
+
+        $ret[null] = null;
+
+        foreach ($apartments as $a) {
+            $ret[$a->id] = "$a->id: ";
+            $ret[$a->id] .= $a->rnum ? "$a->rnum " : '';
+            $ret[$a->id] .= $a->name ? "($a->name) - " : '-';
+            $ret[$a->id] .= $a->anum ? "$a->anum " : '';
+            $ret[$a->id] .= $a->floor ? "($a->floor) " : '';
+        }
+
+        return $ret;
     }
 
     /**

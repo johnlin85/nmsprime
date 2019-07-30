@@ -59,6 +59,11 @@
                         )
                     )
                     @DivClose()
+                    <div class="row">
+                        @DivOpen(12)
+                        @include('dashboard::widgets.quickstart-tools')
+                        @DivClose()
+                    </div>
                 </div>
                 @include('provbase::widgets.documentation')
             </div>

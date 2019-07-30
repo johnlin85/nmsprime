@@ -364,7 +364,7 @@ class Invoice extends \BaseModel
         $price = \App::getLocale() == 'de' ? number_format($price, 2, ',', '.') : number_format($price, 2);
         $sum = \App::getLocale() == 'de' ? number_format($item->charge, 2, ',', '.') : number_format($item->charge, 2);
 
-        $this->data['item_table_positions'] .= $item->count.' & '.escape_latex_special_chars($item->invoice_description).' & '.$price.Currency::get().' & '.$sum.Currency::get().'\\\\';
+        $this->data['item_table_positions'] .= $item->count.' & '.escape_latex_special_chars($item->invoice_description).' & '.$price.Currency::getLatex().' & '.$sum.Currency::getLatex().'\\\\';
     }
 
     public function set_mandate($mandate)
@@ -416,9 +416,9 @@ class Invoice extends \BaseModel
         $this->data['table_sum_tax_formatted'] = \App::getLocale() == 'de' ? number_format($tax, 2, ',', '.') : number_format($tax, 2);
         $this->data['table_sum_charge_total_formatted'] = \App::getLocale() == 'de' ? number_format($total, 2, ',', '.') : number_format($total, 2);
 
-        $this->data['table_summary'] = '~ & Gesamtsumme: & ~ & '.$this->data['table_sum_charge_net_formatted'].Currency::get().'\\\\';
-        $this->data['table_summary'] .= "~ & $tax_percent MwSt: & ~ & ".$this->data['table_sum_tax_formatted'].Currency::get().'\\\\';
-        $this->data['table_summary'] .= '~ & \textbf{Rechnungsbetrag:} & ~ & \textbf{'.$this->data['table_sum_charge_total_formatted'].Currency::get().'}\\\\';
+        $this->data['table_summary'] = '~ & Gesamtsumme: & ~ & '.$this->data['table_sum_charge_net_formatted'].Currency::getLatex().'\\\\';
+        $this->data['table_summary'] .= "~ & $tax_percent MwSt: & ~ & ".$this->data['table_sum_tax_formatted'].Currency::getLatex().'\\\\';
+        $this->data['table_summary'] .= '~ & \textbf{Rechnungsbetrag:} & ~ & \textbf{'.$this->data['table_sum_charge_total_formatted'].Currency::getLatex().'}\\\\';
 
         // make transfer reason (Verwendungszweck)
         if ($transfer_reason = $account->company->transfer_reason) {
@@ -517,7 +517,7 @@ class Invoice extends \BaseModel
         $sum = \App::getLocale() == 'de' ? number_format($sum, 2, ',', '.') : number_format($sum, 2);
         $this->data['cdr_table_positions'] .= '\\hline ~ & ~ & ~ & \textbf{Summe} & \textbf{'.$sum.'}\\\\';
         $plural = $count > 1 ? 'en' : '';
-        $this->data['item_table_positions'] .= "1 & $count Telefonverbindung".$plural.' & '.$sum.Currency::get().' & '.$sum.Currency::get().'\\\\';
+        $this->data['item_table_positions'] .= "1 & $count Telefonverbindung".$plural.' & '.$sum.Currency::getLatex().' & '.$sum.Currency::getLatex().'\\\\';
 
         $this->filename_cdr = date('Y_m', $time_cdr).'_cdr';
     }
@@ -634,37 +634,6 @@ class Invoice extends \BaseModel
             if (is_file($file)) {
                 pdflatex($dir_path, $file, true);
                 ChannelLog::debug('billing', "New $key for Contract ".$this->data['contract_nr'], [$this->data['contract_id'], $file.'.pdf']);
-            }
-        }
-    }
-
-    /**
-     * Removes the temporary latex files after all pdfs were created simultaniously by multiple threads
-     * Test if all Invoices were created successfully
-     *
-     * @throws Exception 	when pdflatex was not able to create PDF from tex document for an invoice
-     */
-    public static function remove_templatex_files($sepaacc = null)
-    {
-        $invoices = \DB::table('invoice')->whereBetween('created_at', [date('Y-m-01'), date('Y-m-01', strtotime('next month'))]);
-        // $invoices = self::whereBetween('created_at', [date('Y-m-01 00:00:00'), date('Y-m-01 00:00:00', strtotime('next month'))]);
-        if ($sepaacc) {
-            $invoices = $invoices->where('sepaaccount_id', '=', $sepaacc->id);
-        }
-
-        $invoices = $invoices->get();
-        foreach ($invoices as $invoice) {
-            // $fn = $invoice->get_invoice_dir_path().$invoice->filename;
-            $fn = self::getFilePathFromData($invoice);
-
-            if (is_file($fn)) {
-                $fn = str_replace('.pdf', '', $fn);
-                unlink($fn);
-                unlink($fn.'.aux');
-                unlink($fn.'.log');
-            } else {
-                // possible errors: syntax/filename/...
-                ChannelLog::error('billing', 'pdflatex: Error creating Invoice PDF '.$fn);
             }
         }
     }

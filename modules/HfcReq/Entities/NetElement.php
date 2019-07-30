@@ -5,7 +5,7 @@ namespace Modules\HfcReq\Entities;
 use Auth;
 use Cache;
 use Session;
-use Modules\HfcBase\Entities\IcingaObjects;
+use Modules\HfcBase\Entities\IcingaObject;
 
 class NetElement extends \BaseModel
 {
@@ -27,7 +27,6 @@ class NetElement extends \BaseModel
     {
         return [
             'name' 			=> 'required|string',
-            // 'ip' 			=> 'ip', 		// also hostname is permitted and soon also mac
             'pos' 			=> 'nullable|geopos',
             'community_ro' 	=> 'nullable|regex:/(^[A-Za-z0-9]+$)+/',
             'community_rw' 	=> 'nullable|regex:/(^[A-Za-z0-9]+$)+/',
@@ -98,23 +97,17 @@ class NetElement extends \BaseModel
                 'edit' => ['netelementtype.name' => 'get_elementtype_name'], ];
     }
 
-    /**
-     * Get Bootstrap class for colorization
-     *
-     * @param mixed     bool or null
-     *  true if db_exists() was already checked - Used to reduce DB queries and improve bad performance of DashboardController::_get_impaired_netelements()
-     */
-    public function get_bsclass($db_exists = null)
+    public function get_bsclass()
     {
         if (in_array($this->get_elementtype_name(), ['Net', 'Cluster'])) {
             return 'info';
         }
 
-        if ($db_exists === false || (is_null($db_exists) && ! IcingaObjects::db_exists())) {
+        if (! IcingaObject::db_exists()) {
             return 'warning';
         }
 
-        $icingaObj = $this->icingaobjects;
+        $icingaObj = $this->icingaobject;
         if ($icingaObj && $icingaObj->is_active) {
             $icingaObj = $icingaObj->icingahoststatus;
             if ($icingaObj) {
@@ -166,19 +159,15 @@ class NetElement extends \BaseModel
     }
 
     /**
-     * Relationship with two (composite) keys
-     *
      * As Android and Iphone app developers use wrong columns to display object name, we use the relation
      * column to describe the object as well
-     *
-     * TODO: Use https://github.com/topclaudy/compoships or use single primary key again
      */
-    public function getIcingaobjectsAttribute()
+    public function icingaobject()
     {
-        return IcingaObjects::where('name1', "{$this->id}_{$this->name}")
+        return $this
+            ->hasOne('Modules\HfcBase\Entities\IcingaObject', 'name1', 'id_name')
             ->where('icinga_objects.objecttype_id', '1')
-            ->where('icinga_objects.is_active', '1')
-            ->with('icingahoststatus')->first();
+            ->where('icinga_objects.is_active', '1');
     }
 
     public function parent()
@@ -209,6 +198,21 @@ class NetElement extends \BaseModel
         } while (! $parent->netelementtype || $parent->netelementtype->get_base_type() != 3);
 
         return $parent;
+    }
+
+    /**
+     * Get List of netelements for edit view select field
+     *
+     * @return array
+     */
+    public function getParentList()
+    {
+        $netelems = \DB::table('netelement')->join('netelementtype as nt', 'nt.id', '=', 'netelementtype_id')
+            ->select(['netelement.id as id', 'netelement.name as name', 'nt.name as ntname'])
+            ->whereNull('netelement.deleted_at')
+            ->get();
+
+        return $this->html_list($netelems, ['ntname', 'name'], true, ': ');
     }
 
     // TODO: rename, avoid recursion

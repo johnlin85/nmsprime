@@ -28,6 +28,11 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
 
     protected $guard = 'admin';
 
+    protected $dates = [
+        'last_login_at',
+        'password_changed_at',
+    ];
+
     /**
      * extending the boot functionality to observe changes
      *
@@ -69,7 +74,7 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
 
     public function tickets()
     {
-        return $this->belongsToMany(Ticket::class, 'ticket_user', 'ticket_id', 'user_id');
+        return $this->belongsToMany(Ticket::class, 'ticket_user', 'user_id', 'ticket_id');
     }
 
     /**
@@ -80,6 +85,7 @@ class User extends BaseModel implements AuthenticatableContract, AuthorizableCon
     public static function rules($id = null)
     {
         return [
+            'email' => 'nullable|email',
             'login_name' => 'required|unique:users,login_name,'.$id.',id,deleted_at,NULL',
             'password' => 'sometimes|min:8|regex:/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).+$/|confirmed',
             'password_confirmation' => 'min:8|required_with:password|same:password',

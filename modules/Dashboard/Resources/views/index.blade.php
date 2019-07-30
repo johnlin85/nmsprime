@@ -47,11 +47,6 @@
                     @DivClose()
                 </div>
                 <div class="row">
-                    @DivOpen(12)
-                        @include('dashboard::widgets.quickstart')
-                    @DivClose()
-                </div>
-                <div class="row">
                     @if ($tickets && $tickets['total'])
                     @section ('ticket_table')
                         @include('ticketsystem::panels.ticket_table')

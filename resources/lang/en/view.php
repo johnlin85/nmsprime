@@ -34,7 +34,7 @@ return [
 //MENU
     //Main Menu
         'Menu_Apartment'            => 'Apartments',
-        'Menu_BillingBase'          => 'Billing Base',
+        'Menu_BillingBase'          => 'Billing',
         'Menu_Debt'                 => 'Debts',
         'Menu_Dunning'              => 'Dunning',
         'Menu_MainMenu'             => 'Main Menu',
@@ -215,6 +215,7 @@ return [
         'Header_EditPhonenumber'	=> 'Edit Phonenumber',
         'Header_Phonenumbers'		=> 'Phonenumber|Phonenumbers',
         'Header_EditPhonenumbers'	=> 'Edit Phonenumber',
+        'Header_PhonebookEntry'		=> 'Phonebook entry',
         'Header_Tickets'			=> 'Ticket|Tickets',
         'Header_EditTickets'		=> 'Edit Tickets',
         //Phone tariff
@@ -223,8 +224,9 @@ return [
         'Header_Phone tariffs'		=> 'Phonetariff|Phonetariffs',
         'Header_EditPhone tariffs'	=> 'Edit Phonetariffs',
     //ProvVoipEnvia
-        'Header_envia TEL orders'	=> 'envia TEL order|envia TEL orders',
-        'Header_envia TEL contracts' => 'envia TEL contract|envia TEL contracts',
+        'Header_EnviaAPI'           => 'envia TEL API',
+        'Header_EnviaContract'      => 'envia TEL contract|envia TEL contracts',
+        'Header_EnviaOrder'         => 'envia TEL order|envia TEL orders',
 
         'Header_Debt'               => 'Debt history',
         'Header_DebtResult'         => 'Outstanding payments total',
@@ -380,6 +382,9 @@ return [
     'Numberrange_Prefix' => 'Prefix',
     'Numberrange_Type' => 'Type',
 
+// VoIP
+    'PhonebookEntry' => 'Phonebook entry',
+
 // Error
     'error_specify_id'          => 'Please specify the hostname instead of the ip address.',
     'error_ticket_settings'     => 'Please set noreply name and address in Global Config Page.',
@@ -389,6 +394,7 @@ return [
     'critical' => 'critical',
     'Debit' => 'Debit',
     'Discard' => 'Discard',
+    'Global' => 'Global',
     'Global notification' => 'Global notification',
     'info' => 'info',
     'Level' => 'Level',

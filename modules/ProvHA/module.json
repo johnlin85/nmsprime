@@ -1,0 +1,16 @@
+{
+    "name": "ProvHA",
+    "alias": "provha",
+    "description": "",
+    "keywords": [],
+    "active": 0,
+    "order": 0,
+    "providers": [
+        "Modules\\ProvHA\\Providers\\ProvHAServiceProvider"
+    ],
+    "aliases": [],
+    "files": [
+        "start.php"
+    ],
+    "requires": []
+}

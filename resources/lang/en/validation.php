@@ -110,7 +110,9 @@ return [
     ],
 
     'docsis'               => ':attribute',
-    'ip'                   => 'This is not a valid IP address of the form: 192.168.0.255',
+    'comma_separated_hostnames_or_ips'  =>  'This is not a comma separated list of hostnames and/or IP addresses',
+    'hostname_or_ip'       => 'This is neither a hostname nor an IP address',
+    'ipv4'                 => 'This is not a valid IP address of the form: 192.168.0.255',
     'ip_in_range'          => 'The IP address is not inside the previous specified range',
     'ip_larger'            => 'The IP address must have a higher number due to address specification in earlier fields',
     'mac'                  => 'The :attribute must be a valid MAC address in form: aa:bb:cc:dd:ee:ff',

@@ -4,6 +4,7 @@ namespace Modules\ProvHA\Providers;
 
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Database\Eloquent\Factory;
+use Log;
 
 class ProvHAServiceProvider extends ServiceProvider
 {
@@ -31,7 +32,7 @@ class ProvHAServiceProvider extends ServiceProvider
 
 
     /**
-     * Add HA/LB related data of current host to super-global $_ENV
+     * Add HA/LB related data of current host to environment
      *
      * @return void
      *
@@ -46,21 +47,33 @@ class ProvHAServiceProvider extends ServiceProvider
             $ips[] = trim($ip);
         }
 
-        $_ENV['PROVHA__OWN_HOSTNAME'] = $hostname;
-        $_ENV['PROVHA__OWN_IPS'] = $ips;
-        $_ENV['PROVHA__OWN_HOSTNAME_AND_IPS'] = array_merge([$hostname], $ips);
+        // extend env by own IPs and hostname
+        putenv('PROVHA__OWN_HOSTNAME='.$hostname);
+        putenv('PROVHA__OWN_IPS='.serialize($ips));
+        putenv('PROVHA__OWN_HOSTNAME_AND_IPS='.serialize(array_merge([$hostname], $ips)));
 
         $provha_config = \DB::table('provha')->first();
-        if (in_array($provha_config->master, $_ENV['PROVHA__OWN_HOSTNAME_AND_IPS'])) {
-            $_ENV['PROVHA__OWN_STATE'] = 'master';
+        if (in_array($provha_config->master, unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))) {
+            putenv('PROVHA__OWN_STATE_DETERMINED=master');
         } else {
-            $_ENV['PROVHA__OWN_STATE'] = 'unknown';
+            putenv('PROVHA__OWN_STATE_DETERMINED=unknown');
             $slaves = explode(',', $provha_config->slaves);
             foreach ($slaves as $slave) {
-                if (in_array(trim($slave), $_ENV['PROVHA__OWN_HOSTNAME_AND_IPS'])) {
-                    $_ENV['PROVHA__OWN_STATE'] = 'slave';
+                if (in_array(trim($slave), unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))) {
+                    putenv('PROVHA__OWN_STATE_DETERMINED=slave');
                 }
             }
+        }
+
+        // check if own state is set in provha.env
+        putenv('PROVHA__OWN_STATE='.strtolower(env('PROVHA__OWN_STATE', '')));
+        if (! env('PROVHA__OWN_STATE')) {
+            Log::critical('ProvHA: own state not set in provha.conf. Determined state is “'.env('PROVHA__OWN_STATE_DETERMINED').'”');
+        } elseif (env('PROVHA__OWN_STATE') != env('PROVHA__OWN_STATE_DETERMINED')) {
+            Log::critical('ProvHA: Configuration mismatch: .env configured host state (“'.env('PROVHA__OWN_STATE').'”) does not match determined host state (“'.env('PROVHA__OWN_STATE_DETERMINED').'”)');
+        }
+        else {
+            Log::debug('ProvHA: Host state is “'.env('PROVHA__OWN_STATE').'”');
         }
     }
 

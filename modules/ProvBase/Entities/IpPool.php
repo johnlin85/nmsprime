@@ -13,15 +13,15 @@ class IpPool extends \BaseModel
     public static function rules($id = null)
     {
         return [
-            'net' => 'required|ip',
-            'netmask' => 'required|ip|netmask',     // netmask must not be in first place!
-            'ip_pool_start' => 'required|ip|ip_in_range:net,netmask|ip_larger:net',   // own validation - see in classes: ExtendedValidator and IpPoolController
-            'ip_pool_end' => 'required|ip|ip_in_range:net,netmask|ip_larger:ip_pool_start',
-            'router_ip' => 'required|ip|ip_in_range:net,netmask',
-            'broadcast_ip' => 'nullable|ip|ip_in_range:net,netmask|ip_larger:ip_pool_end',
-            'dns1_ip' => 'nullable|ip',
-            'dns2_ip' => 'nullable|ip',
-            'dns3_ip' => 'nullable|ip',
+            'net' => 'required|ipv4',
+            'netmask' => 'required|ipv4|netmask',     // netmask must not be in first place!
+            'ip_pool_start' => 'required|ipv4|ip_in_range:net,netmask|ip_larger:net',   // own validation - see in classes: ExtendedValidator and IpPoolController
+            'ip_pool_end' => 'required|ipv4|ip_in_range:net,netmask|ip_larger:ip_pool_start',
+            'router_ip' => 'required|ipv4|ip_in_range:net,netmask',
+            'broadcast_ip' => 'nullable|ipv4|ip_in_range:net,netmask|ip_larger:ip_pool_end',
+            'dns1_ip' => 'nullable|ipv4',
+            'dns2_ip' => 'nullable|ipv4',
+            'dns3_ip' => 'nullable|ipv4',
         ];
     }
 

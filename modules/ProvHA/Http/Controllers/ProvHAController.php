@@ -24,13 +24,15 @@ class ProvHAController extends BaseController
      */
     public function view_form_fields($model = null)
     {
+        $model->verify_settings();
+
         // label has to be the same like column in sql table
         return [
             [
                 'form_type' => 'text',
                 'name' => 'master',
                 'description' => trans('provha::view.master'),
-                'help' => trans('provha::help.master', ['values' => implode('|', config('provha.hostname_and_ips'))])
+                'help' => trans('provha::help.master', ['values' => implode('|', unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))])
             ],
             [
                 'form_type' => 'text',
@@ -50,5 +52,37 @@ class ProvHAController extends BaseController
                 'help' => trans('provha::help.slave_config_rebuild_interval')
             ],
         ];
+    }
+
+
+    /**
+     * Modify form content
+     *
+     * @author Patrick Reichel
+     */
+    protected function prepare_input($data)
+    {
+        $data = parent::prepare_input($data);
+        $data['slaves'] = str_replace(' ', '', $data['slaves']);
+
+        // round up interval to full minute
+        if (is_numeric($data['slave_config_rebuild_interval'])) {
+            $data['slave_config_rebuild_interval'] = 60 * ceil($data['slave_config_rebuild_interval'] / 60);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Add list of this machine's hostname/IPs to check if master is in this list
+     *
+     * @author  Patrick Reichel
+     */
+    public function prepare_rules($rules, $data)
+    {
+        $this_machine = implode(',', unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')));
+        $rules = str_replace('placeholder__is_this_machine', "in:$this_machine", $rules);
+
+        return parent::prepare_rules($rules, $data);
     }
 }

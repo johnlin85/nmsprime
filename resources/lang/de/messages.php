@@ -692,4 +692,6 @@ return [
     'span_spectrum'             => 'Frequenzspanne des Spektrums in MHz',
     'contribute_modem_picture'  => 'Sie können ein Bild dieses Gerätes auf GitHub hinzufügen, damit es in der nächsten NMS Prime Version zur Verfügung steht. Klicken sie auf das Bild um umgeleitet zu werden.',
     'no_modem_picture'          => 'Für dieses Modem gibt es aktuell kein Bild.',
+    'error_reading_file'        => 'Fehler beim Lesen der Datei :0!',
+    'error_writing_file'        => 'Fehler beim Schreiben der Datei :0!',
 ];

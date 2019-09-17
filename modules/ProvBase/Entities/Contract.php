@@ -345,6 +345,22 @@ class Contract extends \BaseModel
     }
 
     /**
+     * Get related documenttemplate of given documenttype.
+     *
+     * @author Patrick Reichel
+     */
+    public function get_documenttemplate_by_type($documenttype_id)
+    {
+        if (!\Module::collections()->has('BillingBase')) {
+            // there should – because of validation in documenttemplates – be only one of the given type
+            return DocumentTemplate::where('documenttype_id', '=', $documenttype_id)->get();
+        }
+        else {
+            return $this->costcenter->sepaaccount->get_documenttemplate_by_type($documenttype_id);
+        }
+    }
+
+    /**
      * Generate use a new user login password
      * This does not save the involved model
      */

@@ -147,6 +147,33 @@ class SepaAccount extends \BaseModel
     }
 
     /**
+     * Get documenttemplate of given type (be it directly related or derived).
+     *
+     * @param   int                 DocumentType ID to get template for
+     * @return  DocumentTemplate
+     * @author  Patrick Reichel
+     */
+    public function get_documenttemplate_by_type($documenttype_id)
+    {
+        // check directly related templates
+        foreach ($this->documenttemplates as $documenttemplate) {
+            if ($documenttemplate->documenttype_id == $documenttype_id) {
+                return $documenttemplate;
+            }
+        }
+
+        // check derived templates
+        foreach ($this->derived_documenttemplates() as $documenttemplate) {
+            if ($documenttemplate->documenttype_id == $documenttype_id) {
+                return $documenttemplate;
+            }
+        }
+
+        // nothing found
+        return null;
+    }
+
+    /**
      * Get all document templates that are used implicitely (“derived”) for use in relation blade.
      *
      * @author Patrick Reichel

@@ -2,11 +2,10 @@
 
 namespace Modules\ProvHA\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Http\Response;
-use Illuminate\Routing\Controller;
+use View;
+use App\Http\Controllers\BaseController;
 
-class ProvHAController extends Controller
+class ProvHAController extends BaseController
 {
     /**
      * Display a listing of the resource.
@@ -14,59 +13,42 @@ class ProvHAController extends Controller
      */
     public function index()
     {
-        return view('provha::index');
+        $title = 'ProvHA Dashboard';
+
+        return View::make('provha::index', $this->compact_prep_view(compact('title')));
     }
 
-    /**
-     * Show the form for creating a new resource.
-     * @return Response
-     */
-    public function create()
-    {
-        return view('provha::create');
-    }
 
     /**
-     * Store a newly created resource in storage.
-     * @param  Request $request
-     * @return Response
+     * defines the formular fields for the edit and create view
      */
-    public function store(Request $request)
+    public function view_form_fields($model = null)
     {
-    }
-
-    /**
-     * Show the specified resource.
-     * @return Response
-     */
-    public function show()
-    {
-        return view('provha::show');
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     * @return Response
-     */
-    public function edit()
-    {
-        return view('provha::edit');
-    }
-
-    /**
-     * Update the specified resource in storage.
-     * @param  Request $request
-     * @return Response
-     */
-    public function update(Request $request)
-    {
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     * @return Response
-     */
-    public function destroy()
-    {
+        // label has to be the same like column in sql table
+        return [
+            [
+                'form_type' => 'text',
+                'name' => 'master',
+                'description' => trans('provha::view.master'),
+                'help' => trans('provha::help.master', ['values' => implode('|', config('provha.hostname_and_ips'))])
+            ],
+            [
+                'form_type' => 'text',
+                'name' => 'slaves',
+                'description' => trans('provha::view.slaves'),
+                'help' => trans('provha::help.slaves')
+            ],
+            [
+                'form_type' => 'text',
+                'name' => 'load_ratio_master',
+                'description' => trans('provha::view.load_ratio_master'),
+                'help' => trans('provha::help.load_ratio_master')],
+            [
+                'form_type' => 'text',
+                'name' => 'slave_config_rebuild_interval',
+                'description' => trans('provha::view.slave_config_rebuild_interval'),
+                'help' => trans('provha::help.slave_config_rebuild_interval')
+            ],
+        ];
     }
 }

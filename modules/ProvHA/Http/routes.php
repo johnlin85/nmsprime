@@ -1,6 +1,6 @@
 <?php
 
-Route::group(['middleware' => 'web', 'prefix' => 'provha', 'namespace' => 'Modules\ProvHA\Http\Controllers'], function()
-{
-    Route::get('/', 'ProvHAController@index');
+BaseRoute::group([], function () {
+    BaseRoute::resource('ProvHA', 'Modules\ProvHA\Http\Controllers\ProvHAController');
 });
+

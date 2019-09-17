@@ -1,25 +1,25 @@
 {
-    "name": "nwidart/provha",
-    "description": "",
-    "authors": [
-        {
-            "name": "Nicolas Widart",
-            "email": "n.widart@gmail.com"
-        }
-    ],
-    "extra": {
-        "laravel": {
-            "providers": [
-                "Modules\\ProvHA\\Providers\\ProvHAServiceProvider"
-            ],
-            "aliases": {
-                
-            }
-        }
-    },
-    "autoload": {
-        "psr-4": {
-            "Modules\\ProvHA\\": ""
-        }
-    }
+	"name": "nmsprime-modules/provha",
+	"description": "NMS Prime HA/LB Provisioning Module",
+	"authors": [
+		{
+			"name": "Roetzer engineering",
+			"email": "info@roetzer-engineering.com"
+		}
+	],
+	"extra": {
+		"laravel": {
+			"providers": [
+				"Modules\\ProvHA\\Providers\\ProvHAServiceProvider"
+			],
+			"aliases": {
+
+			}
+		}
+	},
+	"autoload": {
+		"psr-4": {
+			"Modules\\ProvHA\\": ""
+		}
+	}
 }

@@ -26,6 +26,42 @@ class ProvHAServiceProvider extends ServiceProvider
         $this->registerViews();
         $this->registerFactories();
         $this->loadMigrationsFrom(__DIR__ . '/../Database/Migrations');
+        $this->_add_ha_env_data();
+    }
+
+
+    /**
+     * Add HA/LB related data of current host to super-global $_ENV
+     *
+     * @return void
+     *
+     * @author  Patrick Reichel
+     */
+    protected function _add_ha_env_data()
+    {
+        $hostname = gethostname();
+        $ips_raw = trim(`hostname -I`);
+        $ips = [];
+        foreach (explode(' ', $ips_raw) as $ip) {
+            $ips[] = trim($ip);
+        }
+
+        $_ENV['PROVHA__OWN_HOSTNAME'] = $hostname;
+        $_ENV['PROVHA__OWN_IPS'] = $ips;
+        $_ENV['PROVHA__OWN_HOSTNAME_AND_IPS'] = array_merge([$hostname], $ips);
+
+        $provha_config = \DB::table('provha')->first();
+        if (in_array($provha_config->master, $_ENV['PROVHA__OWN_HOSTNAME_AND_IPS'])) {
+            $_ENV['PROVHA__OWN_STATE'] = 'master';
+        } else {
+            $_ENV['PROVHA__OWN_STATE'] = 'unknown';
+            $slaves = explode(',', $provha_config->slaves);
+            foreach ($slaves as $slave) {
+                if (in_array(trim($slave), $_ENV['PROVHA__OWN_HOSTNAME_AND_IPS'])) {
+                    $_ENV['PROVHA__OWN_STATE'] = 'slave';
+                }
+            }
+        }
     }
 
     /**

@@ -16,6 +16,13 @@ class ProvHAServiceProvider extends ServiceProvider
     protected $defer = false;
 
     /**
+     * The artisan commands provided by this module
+     */
+    protected $commands = [
+        '\Modules\ProvHA\Console\RebuildSlaveConfigCommand',
+    ];
+
+    /**
      * Boot the application events.
      *
      * @return void
@@ -84,7 +91,7 @@ class ProvHAServiceProvider extends ServiceProvider
      */
     public function register()
     {
-        //
+        $this->commands($this->commands);
     }
 
     /**

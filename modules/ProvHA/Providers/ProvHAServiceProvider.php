@@ -59,15 +59,18 @@ class ProvHAServiceProvider extends ServiceProvider
         putenv('PROVHA__OWN_IPS='.serialize($ips));
         putenv('PROVHA__OWN_HOSTNAME_AND_IPS='.serialize(array_merge([$hostname], $ips)));
 
-        $provha_config = \DB::table('provha')->first();
-        if (in_array($provha_config->master, unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))) {
-            putenv('PROVHA__OWN_STATE_DETERMINED=master');
-        } else {
-            putenv('PROVHA__OWN_STATE_DETERMINED=unknown');
-            $slaves = explode(',', $provha_config->slaves);
-            foreach ($slaves as $slave) {
-                if (in_array(trim($slave), unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))) {
-                    putenv('PROVHA__OWN_STATE_DETERMINED=slave');
+        // there is no table if migrating
+        if (\Schema::hasTable('provha')) {
+            $provha_config = \DB::table('provha')->first();
+            if (in_array($provha_config->master, unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))) {
+                putenv('PROVHA__OWN_STATE_DETERMINED=master');
+            } else {
+                putenv('PROVHA__OWN_STATE_DETERMINED=unknown');
+                $slaves = explode(',', $provha_config->slaves);
+                foreach ($slaves as $slave) {
+                    if (in_array(trim($slave), unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))) {
+                        putenv('PROVHA__OWN_STATE_DETERMINED=slave');
+                    }
                 }
             }
         }

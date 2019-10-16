@@ -32,7 +32,7 @@ class ProvHAController extends BaseController
                 'form_type' => 'text',
                 'name' => 'master',
                 'description' => trans('provha::view.master'),
-                'help' => trans('provha::help.master', ['values' => implode('|', unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')))])
+                'help' => trans('provha::help.master', ['values' => implode('|', config('provha.hostinfo.own_hostname_and_ips'))])
             ],
             [
                 'form_type' => 'text',
@@ -80,7 +80,7 @@ class ProvHAController extends BaseController
      */
     public function prepare_rules($rules, $data)
     {
-        $this_machine = implode(',', unserialize(env('PROVHA__OWN_HOSTNAME_AND_IPS')));
+        $this_machine = implode(',', config('provha.hostinfo.own_hostname_and_ips'));
         $rules = str_replace('placeholder__is_this_machine', "in:$this_machine", $rules);
 
         return parent::prepare_rules($rules, $data);

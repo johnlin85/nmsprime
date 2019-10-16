@@ -46,11 +46,11 @@ class ProvHA extends \BaseModel
     public function verify_settings()
     {
         // check if this host's state is set and determined correctly
-        if (! env('PROVHA__OWN_STATE')) {
+        if (! config('provha.hostinfo.own_state')) {
             $msg = 'ProvHA: '.trans('provha::messages.env.state_not_set');
             $this->addAboveMessage($msg, 'error', $place='form');
-        } elseif (env('PROVHA__OWN_STATE') != env('PROVHA__OWN_STATE_DETERMINED')) {
-            $msg = 'ProvHA: '.trans('provha::messages.env.set_and_determined_state_differ', ['set' => env('PROVHA__OWN_STATE'), 'determined' => env('PROVHA__OWN_STATE_DETERMINED')]);
+        } elseif (config('provha.hostinfo.own_state') != config('provha.hostinfo.own_state_determined')) {
+            $msg = 'ProvHA: '.trans('provha::messages.env.set_and_determined_state_differ', ['set' => config('provha.hostinfo.own_state'), 'determined' => config('provha.hostinfo.own_state_determined')]);
             $this->addAboveMessage($msg, 'error', $place='form');
         }
 

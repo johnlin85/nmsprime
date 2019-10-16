@@ -11,8 +11,11 @@ class ProvHA extends \BaseModel
     public static function rules($id = null)
     {
         return [
-            'master' => 'required|hostname_or_ip|placeholder__is_this_machine',
-            'slaves' => 'nullable|comma_separated_hostnames_or_ips',
+            // outcommented validation rules may be used later – if hostnames can be used or if multiple slaves are supported
+            /* 'master' => 'required|hostname_or_ip|placeholder__is_this_machine', */
+            /* 'slaves' => 'nullable|comma_separated_hostnames_or_ips', */
+            'master' => 'required|ipv4|placeholder__is_this_machine',
+            'slaves' => 'nullable|ipv4',
             'load_ratio_master' => 'required|numeric|between:0,1',
             'slave_config_rebuild_interval' => 'required|integer|between:60,604800', // 1min..1week
         ];

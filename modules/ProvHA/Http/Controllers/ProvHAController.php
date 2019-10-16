@@ -32,7 +32,7 @@ class ProvHAController extends BaseController
                 'form_type' => 'text',
                 'name' => 'master',
                 'description' => trans('provha::view.master'),
-                'help' => trans('provha::help.master', ['values' => implode('|', config('provha.hostinfo.own_hostname_and_ips'))])
+                'help' => trans('provha::help.master', ['values' => implode('|', config('provha.hostinfo.own_ips'))])
             ],
             [
                 'form_type' => 'text',
@@ -44,7 +44,9 @@ class ProvHAController extends BaseController
                 'form_type' => 'text',
                 'name' => 'load_ratio_master',
                 'description' => trans('provha::view.load_ratio_master'),
-                'help' => trans('provha::help.load_ratio_master')],
+                'help' => trans('provha::help.load_ratio_master'),
+                'options' => ['readonly'],
+            ],
             [
                 'form_type' => 'text',
                 'name' => 'slave_config_rebuild_interval',

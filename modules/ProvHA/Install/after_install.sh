@@ -30,8 +30,8 @@ echo
 
 # get the master and slave host from user
 while true; do
-	read -p "Enter MASTER IP or hostname to be used in DHCPd failover: " MASTER_ADDRESS
-	read -p "Enter SLAVE IP or hostname to be used in DHCPd failover: " SLAVE_ADDRESS
+	read -p "Enter MASTER IP to be used in DHCPd failover: " MASTER_ADDRESS
+	read -p "Enter SLAVE IP to be used in DHCPd failover: " SLAVE_ADDRESS
 	echo
 	echo "master is $MASTER_ADDRESS"
 	echo "slave  is $SLAVE_ADDRESS"

@@ -25,6 +25,7 @@ class RebuildSlaveConfigCommand extends Command
     protected $description = 'Slave configuration rebuild command';
 
     protected $last_rebuild_file = '/data/provha/last_slave_rebuild';
+    protected $last_rebuild_finished_file = '/data/provha/last_slave_rebuild_finished';
 
     /**
      * Create a new command instance.
@@ -34,6 +35,7 @@ class RebuildSlaveConfigCommand extends Command
     public function __construct()
     {
         parent::__construct();
+        $this->now = now('UTC');
     }
 
 
@@ -53,13 +55,17 @@ class RebuildSlaveConfigCommand extends Command
             $this->rebuildSlaveConfig();
         }
 
-        $now = now();
         $provha_config = \DB::table('provha')->first();
         $provha_rebuild_interval = $provha_config->slave_config_rebuild_interval;
         $last_rebuild = Carbon::parse(Storage::get($this->last_rebuild_file));
+        $seconds_correct = 30;
+        $compare_time = $this->now
+                             ->copy()   // we need a copy as this variable changes in lt($now->subSeconds)…
+                             ->subSeconds($provha_rebuild_interval)
+                             ->addSeconds($seconds_correct);
 
         // check for cyclic rebuild
-        if ($last_rebuild->lt(now()->subSeconds($provha_rebuild_interval))) {
+        if ($last_rebuild->lt($compare_time)) {
             Log::info('ProvHA: Rebuilding slave config: More than '.$provha_rebuild_interval.' seconds since last rebuild');
             $this->rebuildSlaveConfig(True);
         }
@@ -88,7 +94,7 @@ class RebuildSlaveConfigCommand extends Command
             };
             $last_table_update = Carbon::parse($entry->updated_at);
             if ($last_rebuild->lt($last_table_update)) {
-                Log::info('ProvHA: Rebuilding slave config: Database table '.$table.' updated after last rebuild');
+                Log::info('ProvHA: Rebuilding slave config: Database table “'.$table.'” updated after last rebuild');
                 $this->rebuildSlaveConfig(False);
                 return;
             }
@@ -104,10 +110,11 @@ class RebuildSlaveConfigCommand extends Command
      */
     protected function rebuildSlaveConfig($include_configfiles=False)
     {
+        Storage::put($this->last_rebuild_file, $this->now->toIso8601String());
         if ($include_configfiles) {
             \Artisan::call('nms:configfile');
         }
         \Artisan::call('nms:dhcp');
-        Storage::put($this->last_rebuild_file, now('UTC')->toIso8601String());
+        Storage::put($this->last_rebuild_finished_file, now('UTC')->toIso8601String());
     }
 }

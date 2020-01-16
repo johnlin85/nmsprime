@@ -3,7 +3,7 @@
     "alias": "provvoipenvia",
     "description": "envia TEL API",
     "keywords": [],
-    "active": 0,
+    "active": 1,
     "order": 22,
     "priority": 0,
     "icon": "fa-volume-control-phone",

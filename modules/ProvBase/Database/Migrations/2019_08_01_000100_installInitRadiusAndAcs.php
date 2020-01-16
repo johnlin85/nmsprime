@@ -64,11 +64,6 @@ class InstallInitRadiusAndAcs extends BaseMigration
         $content = preg_replace($find, $replace, $content);
         file_put_contents($filename, $content);
 
-        $link = '/etc/raddb/mods-enabled/sql';
-        symlink('/etc/raddb/mods-available/sql', $link);
-        // we can't user php chrgp, since it always dereferences symbolic links
-        exec("chgrp -h radiusd $link");
-
         $observer = new Modules\ProvBase\Entities\QosObserver;
         foreach (Modules\ProvBase\Entities\Qos::all() as $qos) {
             $observer->created($qos);
@@ -93,17 +88,6 @@ class InstallInitRadiusAndAcs extends BaseMigration
         } else {
             $link['crt'] = '/etc/httpd/ssl/httpd.pem';
             $link['key'] = '/etc/httpd/ssl/httpd.key';
-        }
-
-        foreach ($link as $ext => $target) {
-            exec("ln -srf $target /lib/node_modules/genieacs/config/cwmp.$ext");
-        }
-
-        chmod('/lib/node_modules/genieacs/config/cwmp.key', 0444);
-
-        foreach (['radiusd', 'mongod', 'genieacs-cwmp', 'genieacs-fs', 'genieacs-nbi'] as $service) {
-            exec("systemctl enable $service.service");
-            exec("systemctl start $service.service");
         }
     }
 

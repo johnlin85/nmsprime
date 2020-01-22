@@ -14,8 +14,6 @@ class UpdateCccAuthuserMoveTable extends BaseMigration
     {
         $main_db = getenv('DB_DATABASE');
         $ccc_db = getenv('CCC_DB_DATABASE');
-
-        Schema::connection($this->connection)->rename($main_db.'.'.$this->tablename, $ccc_db.'.'.$this->tablename);
     }
 
     /**

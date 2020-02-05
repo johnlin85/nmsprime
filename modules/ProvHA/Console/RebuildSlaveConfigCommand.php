@@ -72,7 +72,7 @@ class RebuildSlaveConfigCommand extends Command
 
         // check for extra rebuild (necessary on changes in certain tables):
         //  * provha
-        //  * cmts
+        //  * netgw
         //  * ippools
         $provha_update = Carbon::parse($provha_config->updated_at);
         if ($last_rebuild->lt($provha_update)) {
@@ -81,7 +81,7 @@ class RebuildSlaveConfigCommand extends Command
             return;
         }
         $check_tables = [
-            'cmts',
+            'netgw',
             'ippool',
             'modem',
             'mta',

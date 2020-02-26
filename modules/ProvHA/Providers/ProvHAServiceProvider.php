@@ -20,6 +20,7 @@ class ProvHAServiceProvider extends ServiceProvider
      */
     protected $commands = [
         '\Modules\ProvHA\Console\RebuildSlaveConfigCommand',
+        '\Modules\ProvHA\Console\SyncHAMasterFiles',
     ];
 
     /**

@@ -11,6 +11,12 @@ class BaseMigration extends Migration
     public function __construct()
     {
         $this->caller_classname = get_class($this);
+
+        // check if migration shall be executed
+        if (! $this->migrationShallRun()) {
+            exit(0);
+        }
+
         echo 'Migrating '.$this->caller_classname."\n";
 
         // get the filename of the caller class
@@ -28,6 +34,29 @@ class BaseMigration extends Migration
         DB::getDoctrineSchemaManager()->getDatabasePlatform()->registerDoctrineTypeMapping('enum', 'string');
         Schema::defaultStringLength(191);
     }
+
+    /**
+     * Check if the migration shall be executed.
+     *
+     * @return bool
+     *
+     * @author Patrick Reichel
+     */
+    public function migrationShallRun()
+    {
+        // do not execute migrations on HA slave machines
+        // migrations are run at master
+        if (\Module::collections()->has('ProvHA')) {
+            if (config('provha.hostinfo.own_state') == 'slave') {
+                echo '! Ignoring migration '.$this->caller_classname." – this is a slave machine.\n";
+                return false;
+            }
+        }
+
+        // default – run the migration
+        return true;
+    }
+
 
     public function up_table_generic(&$table)
     {

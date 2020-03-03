@@ -734,16 +734,48 @@ class ProvMonController extends \BaseController
         return $dtF->diff($dtT)->format('%a Days %h Hours %i Min %s Sec');
     }
 
-    /*
-     * convert docsis mode from int to human readable string
+    /**
+     * Get DOCSIS version of CM/CMTS
+     *
+     * @return DOCS-IF31-MIB::ClabsDocsisVersion or false on error
      */
-    private function _docsis_mode($i)
+    private function getDocsisVersion($host, $com)
     {
-        switch ($i) {
+        $ver = 0;
+
+        $this->snmp_def_mode();
+        try {
+            // docsIfDocsisBaseCapability
+            $ver = snmpget($host, $com, '1.3.6.1.2.1.10.127.1.1.5.0');
+        } catch (\Exception $e) {
+            if (strpos($e->getMessage(), 'php_network_getaddresses: getaddrinfo failed: Name or service not known') !== false ||
+                strpos($e->getMessage(), 'No response from') !== false) {
+                return false;
+            }
+        }
+
+        try {
+            // docsIf31DocsisBaseCapability
+            $ver = snmpget($host, $com, '1.3.6.1.4.1.4491.2.1.28.1.1.0');
+        } catch (\Exception $e) {
+        }
+
+        return $ver;
+    }
+
+    /**
+     * Translate DOCS-IF31-MIB::ClabsDocsisVersion to human-readable string
+     *
+     * @return string
+     */
+    private static function docsisVersionToString($ver)
+    {
+        switch ($ver) {
             case 1: return 'DOCSIS 1.0';
             case 2: return 'DOCSIS 1.1';
             case 3: return 'DOCSIS 2.0';
             case 4: return 'DOCSIS 3.0';
+            case 5: return 'DOCSIS 3.1';
 
             default: return 'n/a';
         }
@@ -797,19 +829,9 @@ class ProvMonController extends \BaseController
      */
     public function realtime($host, $com, $ip, $cacti)
     {
-        // Copy from SnmpController
-        $this->snmp_def_mode();
-
-        try {
-            // First: get docsis mode, some MIBs depend on special DOCSIS version so we better check it first
-            $docsis = snmpget($host, $com, '1.3.6.1.2.1.10.127.1.1.5.0'); // 1: D1.0, 2: D1.1, 3: D2.0, 4: D3.0
-        } catch (\Exception $e) {
-            if (strpos($e->getMessage(), 'php_network_getaddresses: getaddrinfo failed: Name or service not known') !== false ||
-                strpos($e->getMessage(), 'No response from') !== false) {
-                return ['SNMP-Server not reachable' => ['' => [0 => '']]];
-            } elseif (strpos($e->getMessage(), 'Error in packet at') !== false) {
-                $docsis = 1;
-            }
+        $docsis = $this->getDocsisVersion($host, $com);
+        if ($docsis == false) {
+            return ['SNMP-Server not reachable' => ['' => [0 => '']]];
         }
 
         $netgw = Modem::get_netgw($ip);
@@ -820,7 +842,7 @@ class ProvMonController extends \BaseController
             $sys['Firmware'] = [snmpget($host, $com, '.1.3.6.1.2.1.69.1.3.5.0')];
             $sys['Uptime'] = [$this->_secondsToTime(snmpget($host, $com, '.1.3.6.1.2.1.1.3.0') / 100)];
             $sys['Status Code'] = [snmpget($host, $com, '.1.3.6.1.2.1.10.127.1.2.2.1.2.2')];
-            $sys['DOCSIS'] = [$this->_docsis_mode($docsis)]; // TODO: translate to DOCSIS version
+            $sys['DOCSIS'] = [self::docsisVersionToString($docsis)];
             $sys['NetGw'] = [$netgw->hostname];
             $ds['Frequency MHz'] = ArrayHelper::ArrayDiv(snmpwalk($host, $com, '.1.3.6.1.2.1.10.127.1.1.1.1.2'), 1000000);
             $us['Frequency MHz'] = ArrayHelper::ArrayDiv(snmpwalk($host, $com, '.1.3.6.1.2.1.10.127.1.1.2.1.2'), 1000000);
@@ -1024,28 +1046,20 @@ class ProvMonController extends \BaseController
      */
     public function realtimeNetgw($netgw, $com)
     {
-        // Copy from SnmpController
-        $this->snmp_def_mode();
-        try {
-            // First: get docsis mode, some MIBs depend on special DOCSIS version so we better check it first
-            $docsis = snmpget($netgw->ip, $com, '1.3.6.1.2.1.10.127.1.1.5.0'); // 1: D1.0, 2: D1.1, 3: D2.0, 4: D3.0
-        } catch (\Exception $e) {
-            if (((strpos($e->getMessage(), 'php_network_getaddresses: getaddrinfo failed: Name or service not known') !== false) || (strpos($e->getMessage(), 'No response from') !== false))) {
-                return ['SNMP-Server not reachable' => ['' => [0 => '']]];
-            }
-            if (strpos($e->getMessage(), 'noSuchName') !== false) {
-                $docsis = 0;
-            }
+        $docsis = $this->getDocsisVersion($netgw->ip, $com);
+        if ($docsis == false) {
+            return ['SNMP-Server not reachable' => ['' => [0 => '']]];
         }
 
         // System
         $sys['SysDescr'] = [snmpget($netgw->ip, $com, '.1.3.6.1.2.1.1.1.0')];
         $sys['Uptime'] = [$this->_secondsToTime(snmpget($netgw->ip, $com, '.1.3.6.1.2.1.1.3.0') / 100)];
+
         if ($netgw->type != 'cmts') {
             return ['System' => $sys];
         }
 
-        $sys['DOCSIS'] = [$this->_docsis_mode($docsis)];
+        $sys['DOCSIS'] = [self::docsisVersionToString($docsis)];
 
         $freq = snmprealwalk($netgw->ip, $com, '.1.3.6.1.2.1.10.127.1.1.2.1.2');
         try {

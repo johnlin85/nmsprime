@@ -45,19 +45,19 @@ class ProvHA extends \BaseModel
     {
         parent::boot();
 
-        self::observe(new \App\SystemdObserver);
-        self::observe(new ProvHAObserver);
+        self::observe(new \App\SystemdObserver());
+        self::observe(new ProvHAObserver());
     }
 
     public function verify_settings()
     {
         // check if this host's state is set and determined correctly
         if (! config('provha.hostinfo.own_state')) {
-            $msg = 'ProvHA: '.trans('provha::messages.env.state_not_set');
-            $this->addAboveMessage($msg, 'error', $place='form');
+            $msg = 'ProvHA: ' . trans('provha::messages.env.state_not_set');
+            $this->addAboveMessage($msg, 'error', $place = 'form');
         } elseif (config('provha.hostinfo.own_state') != config('provha.hostinfo.own_state_determined')) {
-            $msg = 'ProvHA: '.trans('provha::messages.env.set_and_determined_state_differ', ['set' => config('provha.hostinfo.own_state'), 'determined' => config('provha.hostinfo.own_state_determined')]);
-            $this->addAboveMessage($msg, 'error', $place='form');
+            $msg = 'ProvHA: ' . trans('provha::messages.env.set_and_determined_state_differ', ['set' => config('provha.hostinfo.own_state'), 'determined' => config('provha.hostinfo.own_state_determined')]);
+            $this->addAboveMessage($msg, 'error', $place = 'form');
         }
 
         // check if master/slaves are pingable
@@ -65,10 +65,10 @@ class ProvHA extends \BaseModel
         array_push($hosts, $this->master);
         foreach ($hosts as $host) {
             if ($host) {
-                exec('sudo ping -c1 -i0 -w1 '.$host, $ping, $offline);
+                exec('sudo ping -c1 -i0 -w1 ' . $host, $ping, $offline);
                 if ($offline) {
-                    $msg = 'ProvHA: '.trans('provha::messages.env.host_not_pingable', ['host' => $host]);
-                    $this->addAboveMessage($msg, 'warning', $place='form');
+                    $msg = 'ProvHA: ' . trans('provha::messages.env.host_not_pingable', ['host' => $host]);
+                    $this->addAboveMessage($msg, 'warning', $place = 'form');
                 }
             }
         }
@@ -87,15 +87,15 @@ class ProvHA extends \BaseModel
         $fp = fopen($filename, 'r+');
 
         if (! flock($fp, LOCK_EX)) {
-            Log::error('Could not get exclusive lock for '.$filename);
+            Log::error('Could not get exclusive lock for ' . $filename);
         }
 
         try {
             $data_in = File::get($filename);
         } catch (\Exception $e) {
-            $msg = trans('messages.error_reading_file', [$filename]).'<br> ⇒ '.$e->getMessage();
+            $msg = trans('messages.error_reading_file', [$filename]) . '<br> ⇒ ' . $e->getMessage();
             \Session::push('tmp_error_above_form', $msg);
-            \Log::error("Error reading $filename ".$e->getMessage());
+            \Log::error("Error reading $filename " . $e->getMessage());
             return;
         }
 
@@ -108,25 +108,32 @@ class ProvHA extends \BaseModel
             $level = 'primary';
             $own_ip = $master;
             $peer_ip = $slave;
-        } else {
+            $split = 'split 128;';
+            $mclt = 'mclt 1800;';
+        } elseif ('slave' == config('provha.hostinfo.own_state')) {
             $level = 'secondary';
             $own_ip = $slave;
             $peer_ip = $master;
+        } else {
+            $msg = trans('provha::messages.env.error_hostinfo_own_state', [config('provha.hostinfo.own_state')]);
+            \Session::push('tmp_error_above_form', $msg);
+            \Log::error('hostinfo.own_state ('.config('provha.hostinfo.own_state').' invalid');
+            return false;
         }
 
         // the regexes and the replacement strings later used in preg_replace
         $regexes = [
             [
                 '/(^\s*)(primary|secondary)(;.*)$/m',
-                '$1'.$level.'$3'
+                '$1' . $level . '$3'
             ],
             [
                 '/(^\s*address )([\d\w\.\<\>\_]*)(;.*)$/m',
-                '${1}'.$own_ip.'${3}'   // attention: curly brackets around backreferences are essential here
+                '${1}' . $own_ip . '${3}'   // attention: curly brackets around backreferences are essential here
             ],
             [
                 '/(^\s*peer address )([\d\w\.\<\>\_]*)(;.*)$/m',
-                '${1}'.$peer_ip.'${3}'  // attention: curly brackets around backreferences are essential here
+                '${1}' . $peer_ip . '${3}'  // attention: curly brackets around backreferences are essential here
             ],
         ];
         $data_out = $data_in;
@@ -134,15 +141,65 @@ class ProvHA extends \BaseModel
             $data_out = preg_replace($regex[0], $regex[1], $data_out, 1);
         }
 
+        // special handling of “split” and “mclt” entries (only allowed at master instance)
+        if ('slave' == config('provha.hostinfo.own_state')) {
+            // remove at slave
+            $removes = [
+                '/^.*split .*\\n/m',
+                '/^.*mclt .*\\n/m',
+            ];
+            foreach ($removes as $remove) {
+                $data_out = preg_replace(
+                    $remove,
+                    '',
+                    $data_out,
+                    1
+                );
+            }
+        } elseif ('master' == config('provha.hostinfo.own_state')) {
+            // add or modify “split”
+            if (strpos($data_out, 'split ') === false) {
+                $data_out = preg_replace(
+                    '/(^\s*primary;.*\\n)/m',
+                    "$1\t" . $split . "\n",
+                    $data_out,
+                    1
+                );
+            } else {
+                $data_out = preg_replace(
+                    '/^.*split .*$/m',
+                    "\t$split",
+                    $data_out,
+                    1
+                );
+            }
+
+            // add or modify “mclt”
+            if (strpos($data_out, 'mclt ') === false) {
+                $data_out = preg_replace(
+                    '/(^\s*primary;.*\\n)/m',
+                    "$1\t" . $mclt . "\n",
+                    $data_out,
+                    1
+                );
+            } else {
+                $data_out = preg_replace(
+                    '/^.*mclt .*$/m',
+                    "\t$mclt",
+                    $data_out,
+                    1
+                );
+            }
+        }
+
         if ($data_out != $data_in) {
             try {
                 \Log::info("ProvHA: Writing changes to $filename");
                 File::put($filename, $data_out);
-            }
-            catch (\Exception $ex) {
-                $msg = trans('messages.error_writing_file', [$filename]).'<br> ⇒ '.$e->getMessage();
+            } catch (\Exception $ex) {
+                $msg = trans('messages.error_writing_file', [$filename]) . '<br> ⇒ ' . $e->getMessage();
                 \Session::push('tmp_error_above_form', $msg);
-                \Log::error("Error writing $filename ".$e->getMessage());
+                \Log::error("Error writing $filename " . $e->getMessage());
                 return;
             }
         }
@@ -150,9 +207,7 @@ class ProvHA extends \BaseModel
         // unlock
         flock($fp, LOCK_UN);
         fclose($fp);
-
     }
-
 }
 
 class ProvHAObserver

@@ -2,7 +2,7 @@
 
 use Illuminate\Database\Schema\Blueprint;
 
-class CreateProvHATable extends \BaseMigration
+class CreateProvHATable extends BaseMigration
 {
     // name of the table to create
     protected $tablename = 'provha';
@@ -21,35 +21,14 @@ class CreateProvHATable extends \BaseMigration
             $table->string('slaves');
             $table->float('load_ratio_master', 6)->default(0.5);
             $table->integer('slave_config_rebuild_interval')->unsigned()->default(3600);
-
         });
 
-        // use data from dhcp failover config to populate table
-        $data = file_get_contents('/etc/dhcp-nmsprime/failover.conf');
-        $data = explode("\n", $data);
-        foreach ($data as $entry) {
-            $entry = trim(str_replace(';', '', $entry));
-            if (\Str::startsWith($entry, 'address ')) {
-                $tmp = explode(' ', $entry);
-                $address = array_pop($tmp);
-            } elseif (\Str::startsWith($entry, 'peer address ')) {
-                $tmp = explode(' ', $entry);
-                $peer_address = array_pop($tmp);
-            }
-        }
-        $own_state = getenv('PROVHA__OWN_STATE');
-        if ('master' == $own_state) {
-            $master = $address;
-            $slave = $peer_address;
-        } elseif ('slave' == $own_state) {
-            $master = $peer_address;
-            $slave = $address;
-        } else {
-            $master = 'n/a';
-            $slave = 'n/a';
-        }
+        // at time of install there is no information about own state…
+        $master = 'master.not.set';
+        $slave = 'slave.not.set';
 
-        DB::update("INSERT INTO $this->tablename (created_at, updated_at, master, slaves) VALUES(NOW(), NOW(), '$master', '$slave');");     // insert IP – not sure if hostname can change later on
+        // set ID explicitly to 1 – in some runs this entry has been created with 3 causing the GUI to crash…
+        DB::update("INSERT INTO $this->tablename (id, created_at, updated_at, master, slaves) VALUES(1, NOW(), NOW(), '$master', '$slave');");
 
         return parent::up();
     }
@@ -64,4 +43,3 @@ class CreateProvHATable extends \BaseMigration
         Schema::drop($this->tablename);
     }
 }
-

@@ -51,14 +51,6 @@ class SyncHAMasterFiles extends Command
     public function __construct()
     {
         parent::__construct();
-        if ('master' != config('provha.hostinfo.own_state')) {
-            $msg = "Not a master machine. Exiting ".__CLASS__;
-            echo $msg;
-            Log::error($msg);
-            exit(1);
-        }
-        $provha = ProvHA::find(1);
-        $this->dst_hosts = explode(',', $provha->slaves);
     }
 
 
@@ -71,6 +63,15 @@ class SyncHAMasterFiles extends Command
      */
     public function handle()
     {
+        if ('master' != config('provha.hostinfo.own_state')) {
+            $msg = "Not a master machine. Exiting " . __CLASS__;
+            $this->error($msg);
+            Log::error($msg);
+            exit(1);
+        }
+        $provha = ProvHA::find(1);
+        $this->dst_hosts = explode(',', $provha->slaves);
+
         Log::debug('Begin syncing of master machine to slaves');
         $ssh_port = getenv('SLAVE_SSH_PORT', 22);
         foreach ($this->dst_hosts as $dst_host) {
@@ -89,7 +90,7 @@ class SyncHAMasterFiles extends Command
                     exec($cmd, $output, $retval);
                 } catch (\Exception $e) {
                     $this->error("Something went terribly wrong");
-                    $msg = "Exception running $cmd: ".$e->getMessage();
+                    $msg = "Exception running $cmd: " . $e->getMessage();
                     $this->error($msg);
                     Log::error($msg);
                 }
@@ -98,12 +99,11 @@ class SyncHAMasterFiles extends Command
                 } elseif ($retval == 0) {
                     $this->line(implode("\n", $output));
                 } else {
-                    $msg = "$cmd exited with exitcode $retval – output:\n\t".implode("\n\t", $output);
+                    $msg = "$cmd exited with exitcode $retval – output:\n\t" . implode("\n\t", $output);
                     $this->error($msg);
                     Log::error($msg);
                 }
             }
         }
     }
-
 }

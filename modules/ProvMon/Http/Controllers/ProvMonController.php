@@ -891,6 +891,42 @@ class ProvMonController extends \BaseController
             }
         }
 
+        if ($docsis >= 5) {
+            foreach ($ds['Frequency MHz'] as $key => $freq) {
+                if (! $freq) {
+                    unset($ds['Frequency MHz'][$key]);
+                    unset($ds['Modulation'][$key]);
+                    unset($ds['Power dBmV'][$key]);
+                }
+            }
+            $ds['Frequency MHz'] = array_values($ds['Frequency MHz']);
+            $ds['Modulation'] = array_values($ds['Modulation']);
+            $ds['Power dBmV'] = array_values($ds['Power dBmV']);
+
+            foreach ($us['Frequency MHz'] as $key => $freq) {
+                if (! $freq) {
+                    unset($us['Frequency MHz'][$key]);
+                    unset($us['Width MHz'][$key]);
+                    unset($us['SNR dB'][$key]);
+                }
+            }
+            $us['Frequency MHz'] = array_values($us['Frequency MHz']);
+            $us['Width MHz'] = array_values($us['Width MHz']);
+            $us['SNR dB'] = array_values($us['SNR dB']);
+
+            $vals = $this->d31values($host, $com);
+            if ($vals) {
+                $ds['Frequency MHz'] = array_merge($ds['Frequency MHz'], $vals[0]['Frequency MHz']);
+                $ds['Power dBmV'] = array_merge($ds['Power dBmV'], $vals[0]['Power dBmV']);
+
+                $us['Frequency MHz'] = array_merge($us['Frequency MHz'], $vals[1]['Frequency MHz']);
+                $us['Power dBmV'] = array_merge($us['Power dBmV'], $vals[1]['Power dBmV']);
+            }
+
+            //$ds['Frequency MHz'] = array_merge($ds['Frequency MHz'], ArrayHelper::ArrayDiv(snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.11.1.2'), 1000000));
+            //$ds['Power dBmV'] = array_merge($ds['Power dBmV'], ArrayHelper::ArrayDiv(snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.11.1.3')));
+        }
+
         // colorize downstream
         foreach (['Power dBmV', 'MER dB', 'Microreflection -dBc'] as $item) {
             foreach ($ds[$item] as $key => &$value) {
@@ -911,6 +947,56 @@ class ProvMonController extends \BaseController
         $ret['DT_Upstream'] = array_merge(['#' => array_keys(reset($us))], $us);
 
         return $ret;
+    }
+
+    private function d31values($host, $com)
+    {
+        $ds = [];
+        try {
+            $zeroFreq = snmprealwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.9.1.3');
+            $firstSub = snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.9.1.4');
+            $lastSub = snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.9.1.5');
+            $subSpacing = snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.9.1.7');
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        $i = 0;
+        foreach ($zeroFreq as $oid => $zero) {
+            $idx = explode('.', $oid);
+            $idx = end($idx);
+            // http://www.freepatentsonline.com/y2018/0131582.html
+            $lowFreq = round(($zero + 500 * $subSpacing[$i] * (2 * $firstSub[$i] - 1)) / 1e6);
+            $highFreq = round(($zero + 500 * $subSpacing[$i] * (2 * $lastSub[$i] + 1)) / 1e6);
+            $ds['Frequency MHz'][$idx] = "$lowFreq - $highFreq (OFDM)";
+            $ds['Power dBmV'][$idx] = snmpget($host, $com, ".1.3.6.1.4.1.4491.2.1.28.1.11.1.3.$idx.0") / 10;
+            $i++;
+        }
+
+        $us = [];
+        try {
+            $zeroFreq = snmprealwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.13.1.2');
+            $firstSub = snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.13.1.3');
+            $lastSub = snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.13.1.4');
+            $subSpacing = snmpwalk($host, $com, '.1.3.6.1.4.1.4491.2.1.28.1.13.1.6');
+        } catch (\Exception $e) {
+            return false;
+        }
+
+        $i = 0;
+        foreach ($zeroFreq as $oid => $zero) {
+            $idx = explode('.', $oid);
+            $idx = end($idx);
+            // http://www.freepatentsonline.com/y2018/0131582.html
+            $lowFreq = round(($zero + 500 * $subSpacing[$i] * (2 * $firstSub[$i] - 1)) / 1e6);
+            $highFreq = round(($zero + 500 * $subSpacing[$i] * (2 * $lastSub[$i] + 1)) / 1e6);
+            $us['Frequency MHz'][$idx] = "$lowFreq - $highFreq (OFDM)";
+            $us['Power dBmV'][$idx] = snmpget($host, $com, ".1.3.6.1.4.1.4491.2.1.28.1.13.1.10.$idx") / 10;
+            $i++;
+        }
+
+        //dd([$ds, $us]);
+        return [$ds, $us];
     }
 
     /**

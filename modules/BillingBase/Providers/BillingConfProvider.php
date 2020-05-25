@@ -37,7 +37,7 @@ class BillingConfProvider
 
     private function setConf()
     {
-        $conf = BillingBase::first();
+        $conf = resolve(BillingBase::class);
 
         $this->currency = self::$labels[strtoupper($conf->currency)] ?? '$';
         $this->tax = $conf->tax / 100;

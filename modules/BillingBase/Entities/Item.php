@@ -170,7 +170,7 @@ class Item extends \BaseModel
      */
     protected function fluidDates()
     {
-        return BillingBase::first()->fluid_valid_dates;
+        return resolve(\Modules\BillingBase\Entities\Billingbase::class)->fluid_valid_dates;
     }
 
     public function view_belongs_to()

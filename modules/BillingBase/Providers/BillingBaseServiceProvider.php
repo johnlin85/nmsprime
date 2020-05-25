@@ -44,6 +44,10 @@ class BillingBaseServiceProvider extends ServiceProvider
     {
         $this->commands($this->commands);
 
+        $this->app->singleton(\Modules\BillingBase\Entities\Billingbase::class, function () {
+            return \Modules\BillingBase\Entities\Billingbase::first();
+        });
+
         $this->app->alias(\Modules\BillingBase\Providers\SettlementRunProvider::class, 'settlementrun');
         $this->app->alias(\Modules\BillingBase\Providers\BillingConfProvider::class, 'billingconf');
     }

@@ -149,11 +149,12 @@ class Contract extends \BaseModel
         $ret['Edit']['Modem']['relation'] = $this->modems;
 
         if (Module::collections()->has('BillingBase')) {
+            $items = $this->items()->with('product')->get();
             // view has many version 2
             $ret['Edit']['Item']['class'] = 'Item';
-            $ret['Edit']['Item']['relation'] = $this->items;
+            $ret['Edit']['Item']['relation'] = $items;
             $ret['Billing']['Item']['class'] = 'Item';
-            $ret['Billing']['Item']['relation'] = $this->items;
+            $ret['Billing']['Item']['relation'] = $items;
             $ret['Edit']['SepaMandate']['class'] = 'SepaMandate';
             $ret['Edit']['SepaMandate']['relation'] = $this->sepamandates;
             $ret['Billing']['SepaMandate']['class'] = 'SepaMandate';

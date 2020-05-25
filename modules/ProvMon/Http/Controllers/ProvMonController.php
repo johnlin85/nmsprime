@@ -105,7 +105,8 @@ class ProvMonController extends \BaseController
             return View::make('errors.generic', compact('error', 'message'));
         }
 
-        $modem = $this->modem ?? Modem::find($id);
+        $this->modem = $this->modem ?? Modem::with(['mtas', 'configfile'])->find($id);
+        $modem = $this->modem;
         $mac = strtolower($modem->mac);
         $onlineStatus = $this->modemOnlineStatus($modem);
 
@@ -159,7 +160,7 @@ class ProvMonController extends \BaseController
         $realtime['measure'] = $measure;
         $realtime['forecast'] = '';
 
-        $device = \Modules\ProvBase\Entities\Configfile::where('id', $modem->configfile_id)->first()->device;
+        $device = $modem->configfile->device;
         // time of this function should be observed - can take a huge time as well
         $dash['modemServicesStatus'] = $this->modemServicesStatus($modem, $configfile, $device);
 
@@ -514,7 +515,8 @@ class ProvMonController extends \BaseController
     public function cpe_analysis($id)
     {
         $ping = $lease = $log = $dash = $realtime = null;
-        $modem = $this->modem ? $this->modem : Modem::find($id);
+        $this->modem = $this->modem ? $this->modem : Modem::with(['mtas'])->find($id);
+        $modem = $this->modem;
         $view_var = $modem; // for top header
         $type = 'CPE';
         $modem_mac = strtolower($modem->mac);

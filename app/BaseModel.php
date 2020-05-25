@@ -286,22 +286,14 @@ class BaseModel extends Eloquent
         $type = DB::select(DB::raw('SHOW COLUMNS FROM '.$instance->getTable().' WHERE Field = "'.$name.'"'))[0]->Type;
 
         // create array with enum values (all values in brackets after “enum”)
-        preg_match('/^enum\((.*)\)$/', $type, $matches);
-
-        $enum_values = [];
+        preg_match_all("/'([^']+)'/", $type, $matches);
 
         // add an empty option if wanted
         if ($with_empty_option) {
-            $enum_values[0] = '';
+            array_unshift($matches[1], '');
         }
 
-        // add options extracted from database
-        foreach (explode(',', $matches[1]) as $value) {
-            $v = trim($value, "'");
-            $enum_values[$v] = $v;
-        }
-
-        return $enum_values;
+        return $matches[1] ?? [];
     }
 
     /**

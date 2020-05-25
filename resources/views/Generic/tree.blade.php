@@ -43,7 +43,7 @@
             @endif
 
             <div id="jstree-default">
-                @include('Generic.tree_item', array('items' => $view_var, 'color' => 0))
+                @include('Generic.tree_item', array('items' => $view_var, 'color' => 0, 'root' => true))
             </div>
 
             {{-- delete/submit button of form --}}

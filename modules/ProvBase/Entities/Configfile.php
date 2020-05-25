@@ -42,7 +42,7 @@ class Configfile extends \BaseModel
     }
 
     // icon type for tree view
-    public function get_icon_type()
+    public function get_icon_type($all)
     {
         return $this->device ?: 'default';
     }
@@ -392,12 +392,12 @@ class Configfile extends \BaseModel
      *
      * @author Ole Ernst
      */
-    protected static function _add_parent(&$ids, $cf)
+    protected static function _add_parent(&$ids, $cf, $configfiles)
     {
-        $parent = $cf->parent;
-        if ($parent && ! in_array($parent->id, $ids)) {
-            array_push($ids, $parent->id);
-            self::_add_parent($ids, $parent);
+        $parent = $cf->parent_id;
+        if ($parent && ! in_array($cf->parent_id, $ids)) {
+            array_push($ids, $parent);
+            self::_add_parent($ids, $configfiles[$parent], $configfiles);
         }
     }
 
@@ -413,12 +413,13 @@ class Configfile extends \BaseModel
     public static function undeletables()
     {
         $used_ids = [];
+        $configfiles = self::withCount('modem', 'mtas')->get()->keyBy('id');
 
         // only public configfiles can be assigned to a modem or mta
-        foreach (self::where('public', 'yes')->withCount('modem', 'mtas')->with('parent')->get() as $cf) {
-            if ((($cf->device != 'mta') && $cf->modem_count) || (($cf->device == 'mta') && $cf->mtas_count)) {
+        foreach ($configfiles as $cf) {
+            if ($cf->public && ($cf->device != 'mta' && ($cf->modem_count || $cf->mtas_count))) {
                 array_push($used_ids, $cf->id);
-                self::_add_parent($used_ids, $cf);
+                self::_add_parent($used_ids, $cf, $configfiles);
             }
         }
 

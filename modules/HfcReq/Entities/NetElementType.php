@@ -37,12 +37,15 @@ class NetElementType extends \BaseModel
     }
 
     // icon type for tree view
-    public function get_icon_type()
+    public function get_icon_type($all)
     {
         $type = $this->name ?: 'default';
-        if ($parent = $this->parent) {
+
+        if ($this->parent_id) {
+            $parent = $all[$this->parent_id];
             $type = $parent->name;
-            while ($parent = $parent->parent) {
+            while ($parent->parent_id) {
+                $parent = $all[$parent->parent_id];
                 $type = $parent->name;
             }
         }
@@ -144,10 +147,10 @@ class NetElementType extends \BaseModel
     public static function undeletables()
     {
         $used = [];
-        $all = self::all();
+        $all = self::withCount('netelements')->get();
 
         foreach ($all as $netelementtype) {
-            if ($netelementtype->netelements()->count()) {
+            if ($netelementtype->netelements_count) {
                 $used[] = $netelementtype->id;
             }
         }

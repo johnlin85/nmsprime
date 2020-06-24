@@ -238,6 +238,7 @@ class AbilityController extends Controller
                 'HfcBase',
                 'ProvBase',
                 'ProvVoip',
+                'ProvHA',
                 'OverdueDebts',
             ])
                 ->filter(function ($name) use ($modules) {

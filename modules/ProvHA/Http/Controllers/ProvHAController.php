@@ -36,9 +36,21 @@ class ProvHAController extends BaseController
             ],
             [
                 'form_type' => 'text',
+                'name' => 'master_dns_password',
+                'description' => trans('provha::view.master_dns_pw'),
+                'help' => trans('provha::help.master_dns_pw'),
+            ],
+            [
+                'form_type' => 'text',
                 'name' => 'slaves',
                 'description' => trans('provha::view.slaves'),
                 'help' => trans('provha::help.slaves')
+            ],
+            [
+                'form_type' => 'text',
+                'name' => 'slave_dns_password',
+                'description' => trans('provha::view.slave_dns_pw'),
+                'help' => trans('provha::help.slave_dns_pw'),
             ],
             [
                 'form_type' => 'text',

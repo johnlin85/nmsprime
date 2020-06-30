@@ -11,8 +11,7 @@ class InstallDhcpdDefaultNetwork extends BaseMigration
      */
     public function up()
     {
-        // regenerate dhcpd files as we installed a new default network config
-        \Artisan::call('nms:dhcp');
+        // do nothing – but keep migration (part of the migrations table)
     }
 
     /**

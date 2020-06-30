@@ -3,6 +3,7 @@
 namespace Modules\ProvHA\Entities;
 
 use File;
+use Modules\ProvBase\Entities\ProvBase;
 
 class ProvHA extends \BaseModel
 {
@@ -219,7 +220,9 @@ class ProvHAObserver
      */
     public function updated($provha)
     {
-        \Log::debug('ProvHA: Settings changed, will create new DHCPd config');
+        \Log::debug('ProvHA: Settings changed, will create new DHCPd and DDNS config');
         $provha::make_dhcp_failover_conf();
+        $provbase = ProvBase::first();
+        $provbase->make_ddns_conf();
     }
 }
